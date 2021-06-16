@@ -1,0 +1,4 @@
+- jira:
+    url: https://your-domain.atlassian.net/
+    user: me@example.com
+    token: my-api-token
