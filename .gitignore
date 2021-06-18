@@ -8,6 +8,7 @@ __pycache__/
 
 # Custom
 .vscode
+data/
 jira_conf.yaml
 
 # Distribution / packaging
