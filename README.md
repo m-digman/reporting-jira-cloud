@@ -10,6 +10,7 @@ The Jira authentication settings and label lookup data is stored in jira_conf.ya
 
 To stop any changes to this file getting back into Git use:
 ```
+# use --no-skip-worktree to undo
 git update-index --skip-worktree jira_conf.yaml
 ```
 ## Jira authentication
