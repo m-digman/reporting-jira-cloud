@@ -2,3 +2,10 @@
     url: https://your-domain.atlassian.net/
     user: me@example.com
     token: my-api-token
+- team:
+    team1: My team
+    team2: Another team
+- category:
+    project: Project
+- filter:
+    work_done: 12345
