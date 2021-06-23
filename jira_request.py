@@ -1,25 +1,17 @@
 import requests
-import yaml
 import json
 
-jira_config_file = "jira_conf.yaml"
-base_rest_url = "{0}/rest/{1}"
-base_api2_url = "{0}/rest/api/2/{1}"
-base_api3_url = "{0}/rest/api/3/{1}"
 
 class jira_request(object):
+    __base_rest_url = "{0}/rest/{1}"
+    __base_api2_url = "{0}/rest/api/2/{1}"
+    __base_api3_url = "{0}/rest/api/3/{1}"
     __statuses = {}
 
 
-    def __init__(self):
-        self.__load_config()
-
-
-    def __load_config(self):
-        with open(jira_config_file, "r") as config_file:
-            jira_config = yaml.safe_load(config_file)[0]["jira"]
-            self.__base_url = jira_config["url"]
-            self.__auth_values = jira_config["user"], jira_config["token"]
+    def __init__(self, base_url, auth_values):
+        self.__base_url = base_url
+        self.__auth_values = auth_values
 
 
     def __load_statuses(self):
@@ -45,12 +37,12 @@ class jira_request(object):
 
 
     def get_rest_request(self, url_path):
-        return self.__get_request(base_rest_url.format(self.__base_url, url_path))
+        return self.__get_request(self.__base_rest_url.format(self.__base_url, url_path))
 
 
     def get_api2_request(self, url_path):
-        return self.__get_request(base_api2_url.format(self.__base_url, url_path))
+        return self.__get_request(self.__base_api2_url.format(self.__base_url, url_path))
 
 
     def get_api3_request(self, url_path):
-        return self.__get_request(base_api3_url.format(self.__base_url, url_path))
+        return self.__get_request(self.__base_api3_url.format(self.__base_url, url_path))

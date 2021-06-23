@@ -1,2 +1,5 @@
 requests
 pyyaml
+pandas
+openpyxl
+matplotlib

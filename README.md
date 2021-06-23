@@ -1,38 +1,74 @@
 # reporting-jira-cloud
-Script for extracting data from Jira Cloud API's for reporting purposes
+Script for extracting data from Jira Cloud API's for reporting purposes using a Jira Issues Filter
 
 # Dependencies
 - Python 3.9
 - See requirements.txt (use: pip install -r requirements.txt)
 
-# Setup
-Create an API Token against your Atlassian account and store it somewhere safe:
-https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/
-
-Edit jira_conf.yaml and set the url, user and token. These are the values speciific to your Jira instance, example:
-```yaml
-url: https://your-domain.atlassian.net/
-user: me@example.com
-token: my-api-token
-```
+# Configuration Setup
+The Jira authentication settings and label lookup data is stored in jira_conf.yaml
 
 To stop any changes to this file getting back into Git use:
 ```
 git update-index --skip-worktree jira_conf.yaml
 ```
+## Jira authentication
+Create an API Token against your Atlassian account and store it somewhere safe:
+https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/
+
+Edit jira_conf.yaml and set the url, user and token. These are the values speciific to your Jira instance, example:
+```yaml
+- jira:
+    url: https://your-domain.atlassian.net/
+    user: me@example.com
+    token: my-api-token
+```
+
+## Lookups (labels)
+The team and category data is based on specific labels against a Jira issue (ticket). The label used to represent a team should be added to jira_conf.yaml under
+the "team" section and the work category under the "category" section. The lookup uses lowercase, so please ensure you add the key in lowercase (e.g. "team1", not "TEAM1).
+
+Edit jira_conf.yaml and set add the relevant entries to the "team" and "category" sections. The first value (key) should be the label in lowercase and the second value
+the value you want to be displayed as, example:
+```yaml
+- team:
+    team1: My team
+    team2: Another team
+- category:
+    project: Project
+```
+
+## Filters
+These can also be added to jira_conf.yaml as a lookup, using a more memborable name as ids can be difficult to remember.
+
+Edit jira_conf.yaml and add your filters to the "filter" sections. The first value (key) should be easy to remember name with no spaces and the second value
+the id of the filter setup in Jira, example:
+```yaml
+- filter:
+    work_done: 12345
+```
+Please note that the filter should have a description set in Jira as this is used as the filename when generating the .CSV file.
 
 # Details
+## extract.py
 
-Extracts Jira ticket data based on a Jira Filter ID
-* Completed work last month (10111)
-* Completed work this month (10106)
+Extracts Jira issue data based on a Jira Filter ID that can be supplied as a parameter or retrieved from jira_conf.yaml
 
-Each search generates a separate .csv file in the data folder, using the description text for the filter in Jira as the file name.
+Each search generates a .CSV file in the data folder, using the description text for the filter in Jira as the file name. If there is no descritpion, the Jira Filter ID will be used.
 To improve performance we currently only request the following fields in the search:
-summary, status, created, resolutiondate, components, labels, issuetype, customfield_10023 (Time in Status), and customfield_10024 (Story Points)
-The maximum result set is also limited to 999 tickets (maxResults=999).
+- summary
+- status
+- created
+- resolutiondate
+- components
+- labels
+- issuetype
+- customfield_10023 (Time in Status)
+- customfield_10024 (Story Points)
 
-For the completed work, using the command parameters, we also extract the days in specific status.
+Team and Category resolution is based on labels and driven by the lookup data in jira_conf.yaml. All keys should be lowercase to enable matching.
+
+There are two different column output options, summary and detailed. Summary returns "Key", "Summary", "Category", "Team", "Status", "Created", "Resolved". Detailed column output should only be used for filters that return completed (Done) Jira Issues. Detailed columns include the summary columns, plus "Issue Type", "Story Points", "Days Open" and the following status columns that represent the number of days the issue spent in the specific status.
 
 | Column | Description |
 |---|---|
@@ -45,7 +81,27 @@ For the completed work, using the command parameters, we also extract the days i
 
 The days calculation for the status transitions include weekends and is rounded to 2 decimal places.
 
-# Run
-"py extract.py" - generates separate csv files with basic summary columns ("Key", "Summary", "Category", "Team", "Status", "Created", "Resolved")
+The total number of issues extracted, and the name of the file created are output on successful execution. Any unresolved teams will be reported, along with the Jira Issue ID and unresolved categories will just be reported as "Unknown" in the .CSV
 
-"py extract.py all" - combines completed issues for this month and last month in one csv with detailed view columns ("Issue Type", "Story Points", "Days Open", "To Do", "In Progress", "Ready for Review", "QA Test", "Ready to Release")
+## report.py
+Takes the data from a .CSV generated by extract.py and pivots the data to create an excel spreadsheet for the number of issues completed by the team, grouped by category. The team and category labels defined in jira_conf.yaml are used to drive the data displayed. It also generates a .PNG that charts the data for each team in graph format.
+# Run
+Generates a .CSV file with basic summary columns for the first filter defined in jira_conf.yaml
+```python
+py extract.py
+```
+Generates a .CSV file with detailed columns for the filter id or filter defined in jira_conf.yaml
+```python
+py extract.py 12345
+py extract.py work_done
+```
+Generates a .CSV file with basic summary columns for the filter id or filter defined in jira_conf.yaml
+```python
+py extract.py -s 12345
+py extract.py -s work_done
+```
+Generates a .CSV file with detailed columns for the filter id or filter defined in jira_conf.yaml
+```python
+py extract.py -d 12345
+py extract.py -d work_done
+```
