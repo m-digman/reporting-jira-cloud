@@ -105,3 +105,7 @@ Generates a .CSV file with detailed columns for the filter id or filter defined 
 py extract.py -d 12345
 py extract.py -d work_done
 ```
+Generates a .PNG and .XLSX file covering the total number of issues completed, grouped by category, for each team defined in jira_conf.yaml. The input is the file name created by extract.py, excluding the .CSV extension, but including the path
+```python
+py report.py ".//data//completed-fy-21-22 (June.2021)"
+```
