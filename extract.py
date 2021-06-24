@@ -13,13 +13,6 @@ import os.path
 params_filter = "filter/{0}"
 params_search = "search?jql={0}&maxResults=999&startAt={1}&fields=summary,status,created,resolutiondate,components,labels,issuetype,customfield_10023,customfield_10024"
 
-# Completed work last month
-filter_last_month = 10111
-# Completed work this month
-filter_this_month = 10106
-# Completed work FY21/22
-filter_fy_21_22 = 10112
-
 jira_lookup = jira_config()
 
 
@@ -31,8 +24,9 @@ class Filter(Enum):
 def get_csv_column_names(filter_type):
     col_switcher = {
         Filter.SUMMARY: ["Key", "Summary", "Category", "Team", "Status", "Created", "Resolved"],
-        Filter.DETAIL: ["Key", "Summary", "Category", "Team", "Issue Type", "Story Points", "Created", "Resolved",
-                        "Days Open", "To Do", "In Progress", "Ready for Review", "QA Test", "Ready to Release"]
+        Filter.DETAIL: ["Key", "Summary", "Category", "Team", "Status", "Created", "Resolved", "Issue Type", "Story Points",
+                        "Days Open", "To Do", "In Progress", "Ready for Review", "QA Test", "Ready to Release",
+                        "QA Test Dev", "Ready for Stage", "QA Test Stage", "Ready for Prod"]
     }
     return col_switcher.get(filter_type, "Invalid filter type")
 
@@ -47,7 +41,7 @@ def create_csv(rows, filter_type, file_name):
     create_folder(path)
 
     # file_name comes from Jira filter description
-    filename = "{0}//{1} ({2:%B.%Y}).csv".format(path, file_name, datetime.now())
+    filename = "{0}//{1} ({2:%Y-%m-%d}) {3}.csv".format(path, file_name, datetime.now(), filter_type.name)
     with open(filename, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(get_csv_column_names(filter_type))
@@ -68,6 +62,7 @@ def calc_days(milliseconds):
 
 def get_days_in_status(time_in_status, jira_api):
     to_do, in_progress, ready_for_review, qa_test, ready_to_release = "", "", "", "", ""
+    qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod = "", "", "", ""
 
     # '3_*:*_1_*:*_256892526_*|*_10000_*:*_1_*:*_258319828_*|*_10001_*:*_1_*:*_0'
 
@@ -76,22 +71,27 @@ def get_days_in_status(time_in_status, jira_api):
         values = value.split("_*:*_")
 
         status = jira_api.get_status_name(values[0]).lower()
+        # print(status)
         if status == "to do":
             to_do = calc_days(values[2])
         elif status == "in progress":
             in_progress = calc_days(values[2])
         elif status == "ready for review":
             ready_for_review = calc_days(values[2])
-        # QA/test Dev
-        # Ready to promote to stage
-        # QA test Stage
-        # Ready to promote to prod
         elif status == "qa test":
             qa_test = calc_days(values[2])
         elif status == "ready to release":
             ready_to_release = calc_days(values[2])
+        elif status == "qa/test dev":
+            qa_test_dev = calc_days(values[2])
+        elif status == "ready to promote to stage":
+            ready_for_stage = calc_days(values[2])
+        elif status == "qa test stage":
+            qa_test_stage = calc_days(values[2])
+        elif status == "ready to promote to prod":
+            ready_for_prod = calc_days(values[2])
 
-    return to_do, in_progress, ready_for_review, qa_test, ready_to_release
+    return to_do, in_progress, ready_for_review, qa_test, ready_to_release, qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod
 
 
 def extract_search_results(issues, rows, filter_type, jira_api):
@@ -115,15 +115,17 @@ def extract_search_results(issues, rows, filter_type, jira_api):
             print("** Team Not Found [{0}, {1}] ".format(jira_key, labels))
 
         to_do, in_progress, ready_for_review, qa_test, ready_to_release = "", "", "", "", ""
+        qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod = "", "", "", ""
         if filter_type == Filter.DETAIL and resolved:
             days_open = (resolution_date - created_date).days
-            to_do, in_progress, ready_for_review, qa_test, ready_to_release = get_days_in_status(time_in_status, jira_api)
+            to_do, in_progress, ready_for_review, qa_test, ready_to_release, qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod = get_days_in_status(time_in_status, jira_api)
 
         if filter_type == Filter.SUMMARY:
             rows.append([jira_key, summary, category, team, status, created_date, resolution_date])
         elif filter_type == Filter.DETAIL:
-            rows.append([jira_key, summary, category, team, issue_type, story_points, created_date, resolution_date,
-                         days_open, to_do, in_progress, ready_for_review, qa_test, ready_to_release])
+            rows.append([jira_key, summary, category, team, status, created_date, resolution_date, issue_type, story_points,
+                         days_open, to_do, in_progress, ready_for_review, qa_test, ready_to_release,
+                         qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod])
 
 
 

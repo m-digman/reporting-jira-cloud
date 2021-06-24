@@ -17,8 +17,14 @@ class jira_request(object):
     def __load_statuses(self):
         data = self.get_api3_request("status")
         for status in data:
-            # print(status["id"] + ":" + status["name"])
             self.__statuses[status["id"]] = status["name"]
+
+
+    def get_status_name(self, status_id):
+        if len(self.__statuses) == 0:
+            self.__load_statuses()        
+
+        return self.__statuses.get(status_id)
 
 
     def __get_request(self, url):
@@ -29,13 +35,6 @@ class jira_request(object):
             response.raise_for_status()
 
     
-    def get_status_name(self, status_id):
-        if len(self.__statuses) == 0:
-            self.__load_statuses()        
-
-        return self.__statuses.get(status_id)
-
-
     def get_rest_request(self, url_path):
         return self.__get_request(self.__base_rest_url.format(self.__base_url, url_path))
 
