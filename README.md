@@ -76,9 +76,9 @@ There are two different column output options, summary and detailed. Summary ret
 - QA Test
 - Ready to Release
 - QA Test Dev
-- Ready to Promote to Stage
+- Ready to Promote to Stage (Ready for Stage)
 - QA Test Stage
-- Ready to Promote to Prod
+- Ready to Promote to Prod (Ready for Prod)
 
 The days calculation for the status transitions include weekends and is rounded to 2 decimal places. Days Open is the total lead time, between ticket creation and resolution.
 
