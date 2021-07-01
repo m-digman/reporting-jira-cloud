@@ -108,9 +108,11 @@ py extract.py -d work_done
 ```
 Generates a .PNG and .XLSX file covering the total number of issues completed, grouped by category, for each team defined in jira_conf.yaml. The input is the file name created by extract.py
 ```python
-py report.py './/data//12345 (2021-06-24) SUMMARY.csv'
+py report.py ".//data//12345 (2021-06-24) SUMMARY.csv"
 ```
 Generates a .PNG and .XLSX file covering the total number of issues completed, grouped by category, for the team specified. The input is the file name created by extract.py
 ```python
-py report.py './/data//12345 (2021-06-24) SUMMARY.csv' -t "My team"
+py report.py ".//data//12345 (2021-06-24) SUMMARY.csv" -t "My team"
+py report.py ".//data//12345 (2021-06-24) SUMMARY.csv" -t "My team,Another team"
+
 ```

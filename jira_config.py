@@ -36,7 +36,7 @@ class jira_config(object):
 
 
     def get_teams(self):
-        return self.__teams.values()
+        return list(self.__teams.values())
 
 
     def find_team(self, labels):

@@ -40,14 +40,13 @@ def create_csv(rows, filter_type, file_name):
     path = ".//data"
     create_folder(path)
 
-    # file_name comes from Jira filter description
     filename = "{0}//{1} ({2:%Y-%m-%d}) {3}.csv".format(path, file_name, datetime.now(), filter_type.name)
     with open(filename, 'w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(get_csv_column_names(filter_type))
         writer.writerows(rows)
 
-    print("Extracted {0} tickets to '{1}'".format(len(rows), filename))
+    print("Extracted {0} tickets to \"{1}\"".format(len(rows), filename))
 
 
 def get_date_from_utc_string(date):
@@ -151,16 +150,19 @@ def extract_paged_search_data(jira_api, jql, filter_type, csv_rows):
 
 def get_jql_for_filter(filter_id, jira_api):
     data = jira_api.get_api3_request(params_filter.format(filter_id))
-    return data["jql"], data["description"]
+    try:
+        description = data["description"].strip()
+    except KeyError:
+        description = ""
+
+    # Use the Jira filter description as the filename
+    # If the filter does not have a description, use the id
+    return data["jql"], description if len(description) > 0 else filter_id
 
 
 def store_search_results(filter_type, filter_id):
     jira_api = jira_request(jira_lookup.base_url, jira_lookup.auth_values)
-
     jql, file_name = get_jql_for_filter(filter_id, jira_api)
-    if len(file_name) == 0:
-        # If the filter does not have a description, use the id
-        file_name = filter_id
 
     csv_rows = []
     extract_paged_search_data(jira_api, jql, filter_type, csv_rows)
