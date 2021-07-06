@@ -1,6 +1,7 @@
 from jira_request import jira_request
 from datetime import datetime
 from enum import Enum, auto
+from pprint import pprint
 import csv
 import os
 import os.path
@@ -12,7 +13,7 @@ class jira_data(object):
     __params_search = "search?jql={0}&maxResults=999&startAt={1}&fields=summary,status,created,resolutiondate,components,labels,issuetype,customfield_10023,customfield_10024"
 
 
-    class Filter(Enum):
+    class Columns(Enum):
         SUMMARY = auto()
         DETAIL = auto()
 
@@ -23,29 +24,30 @@ class jira_data(object):
 
 
 
-    def __get_csv_column_names(self, filter_type):
+    def __get_csv_column_names(self, column_type):
         col_switcher = {
-            self.Filter.SUMMARY: ["Key", "Summary", "Category", "Team", "Status", "Created", "Resolved"],
-            self.Filter.DETAIL: ["Key", "Summary", "Category", "Team", "Status", "Created", "Resolved", "Issue Type", "Story Points",
+            self.Columns.SUMMARY: ["Key", "Summary", "Category", "Team", "Status", "Created", "Resolved"],
+            self.Columns.DETAIL: ["Key", "Summary", "Category", "Team", "Status", "Created", "Resolved", "Issue Type", "Story Points",
                             "Days Open", "To Do", "In Progress", "Ready for Review", "QA Test", "Ready to Release",
                             "QA Test Dev", "Ready for Stage", "QA Test Stage", "Ready for Prod"]
         }
-        return col_switcher.get(filter_type, "Invalid filter type")
+        return col_switcher.get(column_type, "Invalid column type")
 
 
     def __create_folder(self, path):
         if not os.path.exists(path):
-            os.mkdir(path)
+            os.makedirs(path)
 
 
-    def __create_csv(self, rows, filter_type, file_name):
-        path = ".//data"
+    def __create_csv(self, rows, column_type, filter_name):
+        today = datetime.now()
+        path = ".//data//{0}//{1:%Y-%m}".format(filter_name.replace("/", "_"), today)
         self.__create_folder(path)
 
-        filename = "{0}//{1} ({2:%Y-%m-%d}) {3}.csv".format(path, file_name, datetime.now(), filter_type.name)
+        filename = "{0}//{1:%d}_{2}.csv".format(path, today, column_type.name)
         with open(filename, 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(self.__get_csv_column_names(filter_type))
+            writer.writerow(self.__get_csv_column_names(column_type))
             writer.writerows(rows)
 
         print("Extracted {0} tickets to \"{1}\"".format(len(rows), filename))
@@ -97,7 +99,7 @@ class jira_data(object):
         return to_do, in_progress, ready_for_review, qa_test, ready_to_release, qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod
 
 
-    def __extract_search_results(self, issues, rows, filter_type):
+    def __extract_search_results(self, issues, rows, column_type):
         for issue in issues:
             jira_key = issue["key"]
             summary = issue["fields"]["summary"]
@@ -120,13 +122,13 @@ class jira_data(object):
             days_open = ""
             to_do, in_progress, ready_for_review, qa_test, ready_to_release = "", "", "", "", ""
             qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod = "", "", "", ""
-            if filter_type == self.Filter.DETAIL and resolved:
+            if column_type == self.Columns.DETAIL and resolved:
                 days_open = (resolution_date - created_date).days
                 to_do, in_progress, ready_for_review, qa_test, ready_to_release, qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod = self.__get_days_in_status(time_in_status)
 
-            if filter_type == self.Filter.SUMMARY:
+            if column_type == self.Columns.SUMMARY:
                 rows.append([jira_key, summary, category, team, status, created_date, resolution_date])
-            elif filter_type == self.Filter.DETAIL:
+            elif column_type == self.Columns.DETAIL:
                 rows.append([jira_key, summary, category, team, status, created_date, resolution_date, issue_type, story_points,
                             days_open, to_do, in_progress, ready_for_review, qa_test, ready_to_release,
                             qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod])
@@ -137,13 +139,13 @@ class jira_data(object):
         return self.__jira_api.get_api3_request(self.__params_search.format(jql, start_at))
 
 
-    def __extract_paged_search_data(self, jql, filter_type, csv_rows):
+    def __extract_paged_search_data(self, jql, column_type, csv_rows):
         start_at = 0
         is_last_page = False
 
         while not is_last_page:
             data = self.__search_jira(jql, start_at)
-            self.__extract_search_results(data["issues"], csv_rows, filter_type)
+            self.__extract_search_results(data["issues"], csv_rows, column_type)
 
             start_index = int(data["startAt"])
             page_size = int(data["maxResults"])
@@ -155,19 +157,12 @@ class jira_data(object):
 
     def __get_jql_for_filter(self, filter_id):
         data = self.__jira_api.get_api3_request(self.__params_filter.format(filter_id))
-        try:
-            description = data["description"].strip()
-        except KeyError:
-            description = ""
-
-        # Use the Jira filter description as the filename
-        # If the filter does not have a description, use the id
-        return data["jql"], description if len(description) > 0 else filter_id
+        return data["jql"], data["name"]
 
 
-    def save_filter_data(self, filter_type, filter_id):
-        jql, file_name = self.__get_jql_for_filter(filter_id)
+    def save_filter_data(self, column_type, filter_id):
+        jql, filter_name = self.__get_jql_for_filter(filter_id)
 
         csv_rows = []
-        self.__extract_paged_search_data(jql, filter_type, csv_rows)
-        return self.__create_csv(csv_rows, filter_type, file_name)
+        self.__extract_paged_search_data(jql, column_type, csv_rows)
+        return self.__create_csv(csv_rows, column_type, filter_name)

@@ -8,7 +8,7 @@ jira_lookup = jira_config()
 
 def query_filter_data_and_plot(filter_id, teams):
     jira_query = jira_data(jira_lookup)
-    filename = jira_query.save_filter_data(jira_data.Filter.SUMMARY, filter_id)
+    filename = jira_query.save_filter_data(jira_data.Columns.SUMMARY, filter_id)
 
     plotter = jira_graph()
     plotter.create_graph(filename, teams)

@@ -44,14 +44,22 @@ class jira_graph(object):
         ticket_total.to_excel(writer, sheet_name="{0}_Total".format(team_name))
 
 
+    def __get_teams_str(self, teams):
+        teams_str = ""
+        for name in teams:
+            teams_str += "_{0}".format(name)
+        
+        return teams_str
+
+
     def __generate_output_filename(self, input_file, teams):
         filename = ""
-        if input_file.endswith("DETAIL.csv"):
-            filename = input_file[0:len(input_file) - 10]
-        if input_file.endswith("SUMMARY.csv"):
+        if input_file.endswith("_DETAIL.csv"):
             filename = input_file[0:len(input_file) - 11]
+        if input_file.endswith("_SUMMARY.csv"):
+            filename = input_file[0:len(input_file) - 12]
     
-        return filename + str(teams).replace(", ", "_")
+        return filename + self.__get_teams_str(teams)
 
 
     def create_graph(self, input_file, teams):

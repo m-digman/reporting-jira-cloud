@@ -19,16 +19,16 @@ def main():
         # Try using the first filter configured
         filter_id = jira_lookup.get_first_filter_id()
         if filter_id:
-            jira_query.save_filter_data(jira_data.Filter.SUMMARY, filter_id)
+            jira_query.save_filter_data(jira_data.Columns.SUMMARY, filter_id)
         else:
             print("Error: no filters are configured") 
     elif len(args) == 1:
-        jira_query.save_filter_data(jira_data.Filter.DETAIL, get_filter_id(args[0]))
+        jira_query.save_filter_data(jira_data.Columns.DETAIL, get_filter_id(args[0]))
     elif len(args) == 2:
         if args[0] == "-d":
-            jira_query.save_filter_data(jira_data.Filter.DETAIL, get_filter_id(args[1]))
+            jira_query.save_filter_data(jira_data.Columns.DETAIL, get_filter_id(args[1]))
         elif args[0] == "-s":
-            jira_query.save_filter_data(jira_data.Filter.SUMMARY, get_filter_id(args[1]))
+            jira_query.save_filter_data(jira_data.Columns.SUMMARY, get_filter_id(args[1]))
         else:
             print("Unknown args: " + str(args))
     else:

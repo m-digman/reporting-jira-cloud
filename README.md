@@ -99,13 +99,13 @@ py report.py work_done "My team,Another team"
 ```
 Generates a .PNG and .XLSX file covering the total number of issues completed, grouped by category, for each team defined in jira_conf.yaml
 ```python
-py report.py -f ".//data//12345 (2021-06-24) SUMMARY.csv"
+py report.py -f ".//data//Some Filter Name//2021-06//24_SUMMARY.csv"
 
 ```
 Generates a .PNG and .XLSX file covering the total number of issues completed, grouped by category, for the team(s) specified. The input is the file name created by extract.py
 ```python
-py report.py -f ".//data//12345 (2021-06-24) SUMMARY.csv" "My team"
-py report.py -f ".//data//12345 (2021-06-24) SUMMARY.csv" "My team,Another team"
+py report.py -f ".//data//Another Filter Name//2021-06//24_SUMMARY.csv" "My team"
+py report.py -f ".//data//Another Filter Name//2021-06//24_SUMMARY.csv" "My team,Another team"
 
 ```
 Generates a .CSV file with basic summary columns for the first filter defined in jira_conf.yaml
