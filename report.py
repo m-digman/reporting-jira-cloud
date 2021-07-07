@@ -10,12 +10,12 @@ def query_filter_data_and_plot(filter_id, teams):
     jira_query = jira_data(jira_lookup)
     filename = jira_query.save_filter_data(jira_data.Columns.SUMMARY, filter_id)
 
-    plotter = jira_graph()
+    plotter = jira_graph(jira_lookup)
     plotter.create_graph(filename, teams)
 
 
 def extract_csv_data_and_plot(filename, teams):
-    plotter = jira_graph()
+    plotter = jira_graph(jira_lookup)
     plotter.create_graph(filename, teams)
 
 
@@ -46,12 +46,12 @@ def show_usage():
 
 
 def main():
-    configured_teams = jira_lookup.get_teams()
+    configured_teams = jira_lookup.teams
 
     args = sys.argv[1:]
     if len(args) == 0:
         # Try using the first filter configured
-        filter_id = jira_lookup.get_first_filter_id()
+        filter_id = jira_lookup.first_filter_id
         if filter_id:
             query_filter_data_and_plot(filter_id, configured_teams)
         else:

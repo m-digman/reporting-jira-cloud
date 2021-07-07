@@ -4,6 +4,12 @@ import matplotlib.pyplot as plt
 
 
 class jira_graph(object):
+
+
+    def __init__(self, jira_config):
+        self.__config = jira_config
+
+
     def __plot_team_ticket_totals(self, team_name, data, axis, writer, show_legend, show_ylabel, only_subplot):
         # Filter data for team
         team_data = data.loc[data["Team"] == team_name]
@@ -21,7 +27,8 @@ class jira_graph(object):
 
         # Plot data in graph (Colours: https://matplotlib.org/stable/gallery/color/named_colors.html)
         ticket_total.plot.line(y="Total", x="Resolved", ax=axis, color={"Total": "yellowgreen"}, lw=3)
-        team_data.plot.bar(ax=axis, color={"Unknown": "firebrick", "Improvement": "royalblue", "BAU": "darkviolet", "Project": "peru"})
+        team_data.plot.bar(ax=axis, color=self.__config.category_colours)
+        #team_data.plot.bar(ax=axis, color={"Unknown": "firebrick", "Improvement": "royalblue", "BAU": "darkviolet", "Project": "peru"})
         axis.set_xlabel(team_name)
         if show_ylabel:
             axis.set_ylabel("Tickets completed")

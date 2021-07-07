@@ -1,7 +1,6 @@
 from jira_request import jira_request
 from datetime import datetime
 from enum import Enum, auto
-from pprint import pprint
 import csv
 import os
 import os.path
