@@ -49,15 +49,13 @@ the id of the filter setup in Jira, example:
 - filter:
     work_done: 12345
 ```
-Please note that the filter should have a description set in Jira as this is used as the filename when generating the .CSV file.
 
 # Details
 ## extract.py
 
 Extracts Jira issue data based on a Jira Filter ID that can be supplied as a parameter or retrieved from jira_conf.yaml
 
-Each search generates a .CSV file in the data folder, using the description text for the filter in Jira as the file name. If there is no descritpion, the Jira Filter ID will be used.
-To improve performance we currently only request the following fields in the search:
+Each search generates a .CSV file in the data folder, using the filter name as a subfolder. To improve performance we currently only request the following fields in the search:
 - summary
 - status
 - created
@@ -70,7 +68,7 @@ To improve performance we currently only request the following fields in the sea
 
 Team and Category resolution is based on labels and driven by the lookup data in jira_conf.yaml. All keys should be lowercase to enable matching.
 
-There are two different column output options, summary and detailed. Summary returns "Key", "Summary", "Category", "Team", "Status", "Created", "Resolved". Detailed column output should only be used for filters that return completed (Done) Jira Issues. Detailed columns include the summary columns, plus "Issue Type", "Story Points", "Days Open" and the following status columns that represent the number of days the issue spent in the following status:
+There are two different column output options, summary and detailed. Summary returns "Key", "Summary", "Category", "Team", "Status", "Created", "Resolved". Detailed column output is only relevant for completed (Done) Jira Issues, so best suited to Jira filters that only retireve resolved issues. Detailed columns include the summary columns, plus "Issue Type", "Story Points", "Days Open" and the following status columns that represent the number of days the issue spent in the following status:
 - To Do
 - In Progress
 - Ready to Review
