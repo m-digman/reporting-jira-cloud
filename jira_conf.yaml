@@ -6,6 +6,7 @@
     team1: My team
     team2: Another team
 - category:
-    project: Project
+    _unknown_: Unknown,firebrick
+    project: Project,peru
 - filter:
     work_done: 12345
