@@ -4,13 +4,15 @@ from enum import Enum, auto
 import csv
 import os
 import os.path
+from pprint import pprint
 
 
 class jira_data(object):
     # Docs https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/#api-rest-api-3-search-get
     __params_filter = "filter/{0}"
-    __params_search = "search?jql={0}&maxResults=999&startAt={1}&fields=summary,status,created,resolutiondate,components,labels,issuetype,customfield_10023,customfield_10024"
-
+    __params_search = "search?jql={0}&maxResults=999&startAt={1}&fields=summary,status,created,resolutiondate,components,labels,issuetype,customfield_10014,customfield_10023,customfield_10024"
+    __params_issue = "issue/{0}"
+    __epic_name_cache = {}
 
     class Columns(Enum):
         SUMMARY = auto()
@@ -26,7 +28,7 @@ class jira_data(object):
     def __get_csv_column_names(self, column_type):
         col_switcher = {
             self.Columns.SUMMARY: ["Key", "Summary", "Category", "Team", "Status", "Created", "Resolved"],
-            self.Columns.DETAIL: ["Key", "Summary", "Category", "Team", "Status", "Created", "Resolved", "Issue Type", "Story Points",
+            self.Columns.DETAIL: ["Key", "Summary", "Category", "Team", "Status", "Created", "Resolved", "Epic", "Issue Type", "Story Points",
                             "Days Open", "To Do", "In Progress", "Ready for Review", "QA Test", "Ready to Release",
                             "QA Test Dev", "Ready for Stage", "QA Test Stage", "Ready for Prod"]
         }
@@ -107,6 +109,7 @@ class jira_data(object):
             issue_type = issue["fields"]["issuetype"]["name"]
             created = issue["fields"]["created"]
             resolved = issue["fields"]["resolutiondate"]
+            epic_id = issue["fields"]["customfield_10014"]
             time_in_status = issue["fields"]["customfield_10023"]
             story_points = issue["fields"]["customfield_10024"]
 
@@ -128,10 +131,26 @@ class jira_data(object):
             if column_type == self.Columns.SUMMARY:
                 rows.append([jira_key, summary, category, team, status, created_date, resolution_date])
             elif column_type == self.Columns.DETAIL:
-                rows.append([jira_key, summary, category, team, status, created_date, resolution_date, issue_type, story_points,
+                epic_name = self.__find_epic_name(epic_id)
+                rows.append([jira_key, summary, category, team, status, created_date, resolution_date, epic_name, issue_type, story_points,
                             days_open, to_do, in_progress, ready_for_review, qa_test, ready_to_release,
                             qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod])
 
+
+    def __retrieve_jira_epic(self, epic_id):
+        data = self.__jira_api.get_api3_request(self.__params_issue.format(epic_id))
+        return data["fields"]["customfield_10011"]
+
+
+    def __find_epic_name(self, epic_id):
+        epic_name = ""
+        if epic_id:
+            epic_name = self.__epic_name_cache.get(epic_id)
+            if (epic_name == None):
+                epic_name = self.__retrieve_jira_epic(epic_id)
+                self.__epic_name_cache[epic_id] = epic_name
+
+        return epic_name
 
 
     def __search_jira(self, jql, start_at):

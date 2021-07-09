@@ -6,7 +6,6 @@
     team1: My team
     team2: Another team
 - category:
-    _unknown_: Unknown,firebrick
     project: Project,peru
     improvement: Product,royalblue
     bau: BAU,darkviolet

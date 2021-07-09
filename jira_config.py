@@ -10,7 +10,7 @@ class jira_config(object):
 
 
     def __init__(self, config_file = None):
-        if (config_file):
+        if config_file:
             self.__jira_config_file = config_file
         self.__load_config()
 
@@ -34,6 +34,11 @@ class jira_config(object):
             self.__categories[key] = category
             colour = categories.get(key).split(",")[1].strip()
             self.__category_colours[category] = colour
+
+        # Add unknown if not configured
+        if self.__categories.get("_unknown_") == None:
+            self.__categories["_unknown_"] = "Unknown"
+            self.__category_colours["Unknown"] = "firebrick"
 
 
     @property

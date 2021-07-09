@@ -2,7 +2,7 @@ import unittest
 from jira_config import jira_config
 
 
-class jira_configTest(unittest.TestCase):
+class jira_config_test(unittest.TestCase):
 
 
     def setUp(self):
@@ -54,9 +54,9 @@ class jira_configTest(unittest.TestCase):
         self.assertEqual(actual, 12345)
 
 
-    def test_category_unknown_is_firebrick(self):
+    def test_unknown_category_returned_if_not_configured(self):
         actual = self.config.category_colours.get("Unknown")
-        self.assertEqual(actual, "firebrick")
+        self.assertIsNotNone(actual)
 
 
     def test_category_bau_is_darkviolet(self):

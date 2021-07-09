@@ -10,7 +10,7 @@ class jira_graph(object):
         self.__config = jira_config
 
 
-    def __plot_team_ticket_totals(self, team_name, data, axis, writer, show_legend, show_ylabel, only_subplot):
+    def __plot_team_ticket_totals(self, team_name, data, axis, writer, show_ylabel):
         # Filter data for team
         team_data = data.loc[data["Team"] == team_name]
         if len(team_data) == 0:
@@ -18,7 +18,7 @@ class jira_graph(object):
 
         # Get monthly ticket count for each category 
         team_data = team_data.groupby([pd.Grouper(key='Resolved', freq='M'), 'Category']).size().to_frame(name='Tickets').reset_index()
-        # Change column to Year-Month  (Bug: https://github.com/pandas-dev/pandas/issues/4387)
+        # Change column to Year-Month (Bug: https://github.com/pandas-dev/pandas/issues/4387)
         team_data['Resolved'] = team_data['Resolved'].dt.strftime('%Y-%m')
         # Pivot data for reporting in graph
         team_data = team_data.pivot_table(values="Tickets", index=["Resolved"], columns="Category").fillna(0)
@@ -28,23 +28,18 @@ class jira_graph(object):
         # Plot data in graph (Colours: https://matplotlib.org/stable/gallery/color/named_colors.html)
         ticket_total.plot.line(y="Total", x="Resolved", ax=axis, color={"Total": "yellowgreen"}, lw=3)
         team_data.plot.bar(ax=axis, color=self.__config.category_colours)
-        #team_data.plot.bar(ax=axis, color={"Unknown": "firebrick", "Improvement": "royalblue", "BAU": "darkviolet", "Project": "peru"})
         axis.set_xlabel(team_name)
         if show_ylabel:
             axis.set_ylabel("Tickets completed")
         else:
             axis.set_ylabel("")
 
-        if only_subplot:
-            axis.legend(loc='upper center', bbox_to_anchor=(0.5, 1.12), ncol=5, fancybox=True, shadow=True)
-        elif show_legend:
-            axis.legend(loc='upper left', bbox_to_anchor=(1.05, 1), fancybox=True, shadow=True)
-        else:
-            axis.get_legend().remove()
+        # Add key
+        axis.legend(loc='upper center', bbox_to_anchor=(0.5, 1.19), ncol=2, fancybox=True, shadow=True, fontsize='small', labelspacing=0.2)
 
-        # Add bar values and position correctly
-        for p in axis.patches:
-            axis.annotate(format(p.get_height(), '.0f') if p.get_height() else "", (p.get_x() - 0.04 if p.get_height() > 9 else p.get_x() + 0.01, p.get_height() + 0.3))
+        # Add bar values
+        for container in axis.containers:
+            axis.bar_label(container, fontsize=9)
 
         # Save data as excel tab
         team_data.to_excel(writer, sheet_name="{0}_Tickets".format(team_name))
@@ -85,10 +80,8 @@ class jira_graph(object):
         number_of_teams = len(teams)
         fig, axes = plt.subplots(nrows=1, ncols=number_of_teams)
 
-        only_subplot = number_of_teams == 1
-
         fig_width = (number_of_teams * 3.5) + (10 - number_of_teams)
-        if only_subplot:
+        if number_of_teams == 1:
             fig_width = 6
 
         fig.set_figwidth(fig_width)
@@ -98,10 +91,9 @@ class jira_graph(object):
             axis_index = 0
 
             for team in teams:
-                show_legend = axis_index == number_of_teams - 1
                 show_ylabel = axis_index == 0
 
-                self.__plot_team_ticket_totals(team, data, axes if number_of_teams == 1 else axes[axis_index], writer, show_legend, show_ylabel, only_subplot)
+                self.__plot_team_ticket_totals(team, data, axes if number_of_teams == 1 else axes[axis_index], writer, show_ylabel)
                 axis_index += 1
 
         fig.autofmt_xdate(rotation=45)
