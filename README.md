@@ -63,12 +63,13 @@ Each search generates a .CSV file in the data folder, using the filter name as a
 - components
 - labels
 - issuetype
+- customfield_10014 (Epic Key)
 - customfield_10023 (Time in Status)
 - customfield_10024 (Story Points)
 
 Team and Category resolution is based on labels and driven by the lookup data in jira_conf.yaml. All keys should be lowercase to enable matching.
 
-There are two different column output options, summary and detailed. Summary returns "Key", "Summary", "Category", "Team", "Status", "Created", "Resolved". Detailed column output is only relevant for completed (Done) Jira Issues, so best suited to Jira filters that only retireve resolved issues. Detailed columns include the summary columns, plus "Issue Type", "Story Points", "Days Open" and the following status columns that represent the number of days the issue spent in the following status:
+There are two different column output options, summary and detailed. Summary returns "Key", "Summary", "Category", "Team", "Status", "Created", "Resolved". Detailed column output is only relevant for completed (Done) Jira Issues, so best suited to Jira filters that only retireve resolved issues. Detailed columns include the summary columns, plus "Epic", "Issue Type", "Story Points", "Days Open" and the following status columns that represent the number of days the issue spent in the following status:
 - To Do
 - In Progress
 - Ready to Review
