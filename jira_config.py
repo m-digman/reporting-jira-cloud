@@ -38,7 +38,7 @@ class jira_config(object):
         # Add unknown if not configured
         if self.__categories.get("_unknown_") == None:
             self.__categories["_unknown_"] = "Unknown"
-            self.__category_colours["Unknown"] = "firebrick"
+            self.__category_colours["Unknown"] = "red"
 
 
     @property
