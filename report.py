@@ -53,6 +53,7 @@ def show_usage():
     print("Usage:\r\n======")
     print("  report.py \"<filter>\"")
     print("  report.py \"<filter>\" \"<teams>\"")
+    print("  report.py -t \"<teams>\"")
     print("  report.py -f \"<csv_filename>\"")
     print("  report.py -f \"<csv_filename>\" \"<teams>\"")
 
