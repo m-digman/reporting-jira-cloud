@@ -28,13 +28,17 @@ Edit jira_conf.yaml and set the url, user and token. These are the values specii
 ## Lookups (labels)
 The team and category data is based on specific labels against a Jira issue (ticket). The label used to represent a team should be added to jira_conf.yaml under
 the "team" section and the work category under the "category" section. The lookup uses lowercase, so please ensure you add the key in lowercase (e.g. "team1", not "TEAM1).
+If tickets are spread over multiple projects (e.g. one team per project), the lowercase Jira project key can also be added in the team section. The tickets labels will
+first be used in the lookup, but if there is no match it will then look for the project key taken from the first part of the Jira issue key. So if the key is "XXX-123",
+it would look for "xxx" in the "team" section.
 
 Edit jira_conf.yaml and set add the relevant entries to the "team" and "category" sections. The first value (key) should be the label in lowercase and the second value
 the value you want to be displayed as, example:
 ```yaml
 - team:
-    team1: My team
-    team2: Another team
+    team1-label: My team
+    team2-label: Another team
+    team-project-key: Your team
 - category:
     _unknown_: Unknown,firebrick
     project: Project,peru

@@ -100,6 +100,18 @@ class jira_data(object):
         return to_do, in_progress, ready_for_review, qa_test, ready_to_release, qa_test_dev, ready_for_stage, qa_test_stage, ready_for_prod
 
 
+    def __get_team_name(self, key, labels):
+        team = self.__config.find_team(labels)
+        if (len(team) == 0):
+            project = key.split("-")[0].lower()
+            team = self.__config.find_team({project})
+
+        if (len(team) == 0):
+            print("** Team Not Found [key:{0}, project:{1}, labels:{2}] ".format(key, project, labels))
+
+        return team
+
+
     def __extract_search_results(self, issues, rows, column_type):
         for issue in issues:
             jira_key = issue["key"]
@@ -117,9 +129,7 @@ class jira_data(object):
             resolution_date = self.__get_date_from_utc_string(resolved)
 
             category = self.__config.find_category(labels)
-            team = self.__config.find_team(labels)
-            if (len(team) == 0):
-                print("** Team Not Found [{0}, {1}] ".format(jira_key, labels))
+            team = self.__get_team_name(jira_key, labels)
 
             days_open = ""
             to_do, in_progress, ready_for_review, qa_test, ready_to_release = "", "", "", "", ""
