@@ -32,7 +32,7 @@ If tickets are spread over multiple projects (e.g. one team per project), the lo
 first be used in the lookup, but if there is no match it will then look for the project key taken from the first part of the Jira issue key. So if the key is "XXX-123",
 it would look for "xxx" in the "team" section.
 
-Edit jira_conf.yaml and set add the relevant entries to the "team" and "category" sections. The first value (key) should be the label in lowercase and the second value
+Edit jira_conf.yaml and add the relevant entries to the "team" and "category" sections. The first value (key) should be the label (or project key for teams) in lowercase and the second value
 the value you want to be displayed as, example:
 ```yaml
 - team:
