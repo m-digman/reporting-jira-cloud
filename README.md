@@ -20,7 +20,7 @@ https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-
 Edit jira_conf.yaml and set the url, user and token. These are the values speciific to your Jira instance, example:
 ```yaml
 - jira:
-    url: https://your-domain.atlassian.net/
+    url: https://your-domain.atlassian.net
     user: me@example.com
     token: my-api-token
 ```

@@ -65,41 +65,44 @@ class jira_graph(object):
 
 
     def create_graph(self, input_file, teams):
-        filename = self.__generate_output_filename(input_file, teams)
-        output_file_xlsx = "{0}.xlsx".format(filename)
-        output_file_png = "{0}.png".format(filename)
+        if len(input_file) == 0:
+            print("Failed to create graph (empty filename)")
+        else:
+            filename = self.__generate_output_filename(input_file, teams)
+            output_file_xlsx = "{0}.xlsx".format(filename)
+            output_file_png = "{0}.png".format(filename)
 
-        # Use parse_dates to correctly format column data as datetime
-        data = pd.read_csv(input_file, delimiter=',', encoding="ISO-8859-1", parse_dates=['Resolved'])
-    
-        # Only report on "Done" issues
-        data = data.loc[data["Status"] == "Done"]
+            # Use parse_dates to correctly format column data as datetime
+            data = pd.read_csv(input_file, delimiter=',', encoding="ISO-8859-1", parse_dates=['Resolved'])
+        
+            # Only report on "Done" issues
+            data = data.loc[data["Status"] == "Done"]
 
-        # Create separate graphs, 1 for each team
-        # Use subplot_kw={'ylim': (0,70)} to set y-axis range
-        number_of_teams = len(teams)
-        fig, axes = plt.subplots(nrows=1, ncols=number_of_teams)
+            # Create separate graphs, 1 for each team
+            # Use subplot_kw={'ylim': (0,70)} to set y-axis range
+            number_of_teams = len(teams)
+            fig, axes = plt.subplots(nrows=1, ncols=number_of_teams)
 
-        fig_width = (number_of_teams * 3.5) + (10 - number_of_teams)
-        if number_of_teams == 1:
-            fig_width = 6
+            fig_width = (number_of_teams * 3.5) + (10 - number_of_teams)
+            if number_of_teams == 1:
+                fig_width = 6
 
-        fig.set_figwidth(fig_width)
-        fig.set_figheight(5)
-    
-        with pd.ExcelWriter(output_file_xlsx) as writer:
-            axis_index = 0
+            fig.set_figwidth(fig_width)
+            fig.set_figheight(5)
+        
+            with pd.ExcelWriter(output_file_xlsx) as writer:
+                axis_index = 0
 
-            for team in teams:
-                show_ylabel = axis_index == 0
+                for team in teams:
+                    show_ylabel = axis_index == 0
 
-                self.__plot_team_ticket_totals(team, data, axes if number_of_teams == 1 else axes[axis_index], writer, show_ylabel)
-                axis_index += 1
+                    self.__plot_team_ticket_totals(team, data, axes if number_of_teams == 1 else axes[axis_index], writer, show_ylabel)
+                    axis_index += 1
 
-        fig.autofmt_xdate(rotation=45)
-        #plt.show()
+            fig.autofmt_xdate(rotation=45)
+            #plt.show()
 
-        # Save graph
-        plt.savefig(output_file_png)
+            # Save graph
+            plt.savefig(output_file_png)
 
-        print("Created \"{0}\" and \"{1}\"".format(output_file_xlsx, output_file_png))
+            print("Created \"{0}\" and \"{1}\"".format(output_file_xlsx, output_file_png))

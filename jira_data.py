@@ -1,3 +1,4 @@
+from requests.models import HTTPError
 from jira_request import jira_request
 from datetime import datetime
 from enum import Enum, auto
@@ -189,8 +190,15 @@ class jira_data(object):
 
 
     def save_filter_data(self, column_type, filter_id):
-        jql, filter_name = self.__get_jql_for_filter(filter_id)
+        created_filename = ""
+        try:
+            jql, filter_name = self.__get_jql_for_filter(filter_id)
+            print("Using filter: {0} ({1})".format(filter_name, filter_id))
 
-        csv_rows = []
-        self.__extract_paged_search_data(jql, column_type, csv_rows)
-        return self.__create_csv(csv_rows, column_type, filter_name)
+            csv_rows = []
+            self.__extract_paged_search_data(jql, column_type, csv_rows)
+            created_filename = self.__create_csv(csv_rows, column_type, filter_name)
+        except HTTPError:
+            print("Failed to find filter (id: {0})".format(filter_id))
+
+        return created_filename
