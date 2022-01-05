@@ -6,17 +6,16 @@ import sys
 jira_lookup = jira_config()
 
 
-def query_filter_data_and_plot(filter_id, teams):
-    jira_query = jira_data(jira_lookup)
-    filename = jira_query.save_filter_data(jira_data.Columns.SUMMARY, filter_id)
-
-    plotter = jira_graph(jira_lookup)
-    plotter.create_graph(filename, teams)
-
-
 def extract_csv_data_and_plot(filename, teams):
     plotter = jira_graph(jira_lookup)
-    plotter.create_graph(filename, teams)
+    plotter.create_ticket_graphs_by_team(filename, teams)
+
+
+def get_filter_data_and_plot(filter_id, teams):
+    jira_query = jira_data(jira_lookup)
+    filename = jira_query.save_filter_data(filter_id)
+
+    extract_csv_data_and_plot(filename, teams)
 
 
 def get_filter_id(filter_param):
@@ -41,10 +40,10 @@ def parse_teams(configured_teams, teams):
     return teams_to_show
 
 
-def use_first_filter(teams):
+def get_default_filter_id():
     filter_id = jira_lookup.first_filter_id
     if filter_id:
-        query_filter_data_and_plot(filter_id, teams)
+        return filter_id
     else:
         print("Error: no filters are configured")
 
@@ -60,6 +59,7 @@ def get_unique_team_names():
 
 def show_usage():
     print("Usage:\r\n======")
+    print("  report.py")
     print("  report.py \"<filter>\"")
     print("  report.py \"<filter>\" \"<teams>\"")
     print("  report.py -t \"<teams>\"")
@@ -73,21 +73,21 @@ def main():
     args = sys.argv[1:]
     if len(args) == 0:
         # Try using the first filter configured
-        use_first_filter(configured_teams)
+        get_filter_data_and_plot(get_default_filter_id(), configured_teams)
     elif len(args) == 1:
         if args[0] == "-h" or args[0] == "-help":
             show_usage()
         else:
             # Assume filter id passed
-            query_filter_data_and_plot(get_filter_id(args[0]), configured_teams)
+            get_filter_data_and_plot(get_filter_id(args[0]), configured_teams)
     elif len(args) == 2:
         if args[0] == "-t":
-            use_first_filter(parse_teams(configured_teams, args[1].split(",")))
+            get_filter_data_and_plot(get_default_filter_id(), parse_teams(configured_teams, args[1].split(",")))
         elif args[0] == "-f":
             extract_csv_data_and_plot(args[1], configured_teams)
         else:
             # Assume filter id and teams passed
-            query_filter_data_and_plot(get_filter_id(args[0]), parse_teams(configured_teams, args[1].split(",")))
+            get_filter_data_and_plot(get_filter_id(args[0]), parse_teams(configured_teams, args[1].split(",")))
     elif len(args) == 3:
         if args[0] == "-f":
             extract_csv_data_and_plot(args[1], parse_teams(configured_teams, args[2].split(",")))

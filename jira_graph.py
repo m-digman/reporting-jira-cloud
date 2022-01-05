@@ -1,50 +1,183 @@
-from jira_config import jira_config
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
+from enum import Enum, auto
+
+
+AVERAGE = "Average"
+CATEGORY = "Category"
+CYCLE_DAYS = "Cycle Days"
+LEAD_DAYS = "Lead Days"
+RESOLVED = "Resolved"
+STATUS = "Status"
+STORY_POINTS = "Story Points"
+TEAM = "Team"
+TICKETS = "Tickets"
+TOTAL = "Total"
 
 
 class jira_graph(object):
+
+    class Columns(Enum):
+        CYCLE = auto()
+        LEAD = auto()
 
 
     def __init__(self, jira_config):
         self.__config = jira_config
 
 
-    def __plot_team_ticket_totals(self, team_name, data, axis, writer, show_ylabel):
+    def __plot_monthly_team_ticket_categories(self, team_name, data, axis, writer, show_ylabel):
         # Filter data for team
-        team_data = data.loc[data["Team"] == team_name]
+        team_data = data.loc[data[TEAM] == team_name]
         if len(team_data) == 0:
             return
 
         # Get monthly ticket count for each category 
-        team_data = team_data.groupby([pd.Grouper(key='Resolved', freq='M'), 'Category']).size().to_frame(name='Tickets').reset_index()
+        team_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='M'), CATEGORY]).size().to_frame(name=TICKETS).reset_index()
         # Change column to Year-Month (Bug: https://github.com/pandas-dev/pandas/issues/4387)
-        team_data['Resolved'] = team_data['Resolved'].dt.strftime('%Y-%m')
+        team_data[RESOLVED] = team_data[RESOLVED].dt.strftime('%m/%y')
         # Pivot data for reporting in graph
-        team_data = team_data.pivot_table(values="Tickets", index=["Resolved"], columns="Category").fillna(0)
+        team_data = team_data.pivot_table(values=TICKETS, index=[RESOLVED], columns=CATEGORY).fillna(0)
         # Total tickets completed for each month
-        ticket_total = team_data.sum(axis=1).to_frame(name='Total').reset_index()
+        ticket_total = team_data.sum(axis=1).to_frame(name=TOTAL).reset_index()
 
         # Plot data in graph (Colours: https://matplotlib.org/stable/gallery/color/named_colors.html)
-        ticket_total.plot.line(y="Total", x="Resolved", ax=axis, color={"Total": "yellowgreen"}, lw=3)
-        team_data.plot.bar(ax=axis, color=self.__config.category_colours)
-        axis.set_xlabel(team_name)
+        team_data.plot.bar(ax=axis, color=self.__config.category_colours, stacked=True)
+
+        average = ticket_total[TOTAL].mean()
+        ticket_total.loc[:, AVERAGE] = average
+        ticket_total.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:green", lw=2, label="Monthly Avg ({0:.1f})".format(average))
+
+        axis.set_title(team_name, loc="left")
+        axis.set_xlabel("")
         if show_ylabel:
-            axis.set_ylabel("Tickets completed")
+            axis.set_ylabel("Tickets Completed")
         else:
             axis.set_ylabel("")
 
+        self.__set_monthly_yticks(axis, True)
+
         # Add key
-        axis.legend(loc='upper center', bbox_to_anchor=(0.5, 1.19), ncol=2, fancybox=True, shadow=True, fontsize='small', labelspacing=0.2)
+        axis.legend(loc='best', fontsize='small', labelspacing=0.2)
 
-        # Add bar values
+        # Add stacked bar values
         for container in axis.containers:
-            axis.bar_label(container, fontsize=9)
+            axis.bar_label(container, fontsize=9, label_type="center")
 
-        # Save data as excel tab
         team_data.to_excel(writer, sheet_name="{0}_Tickets".format(team_name))
         ticket_total.to_excel(writer, sheet_name="{0}_Total".format(team_name))
 
+
+    def __set_monthly_yticks(self, axis, start_from_zero):
+        next = 0
+        yticks = []
+
+        start, end = axis.get_ylim()
+        while next <= end:
+            if start_from_zero or next > start:
+                yticks.append(next)
+            if end > 100:
+                next += 10
+            else:
+                next += 5
+        
+        axis.yaxis.set_ticks(yticks)
+
+
+    def __plot_monthly_team_ticket_totals(self, team_name, data, axis, writer, show_ylabel):
+        # Filter data for team
+        team_data = data.loc[data[TEAM] == team_name].copy()
+        if len(team_data) == 0:
+            return
+
+        ticket_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='M')]).size().to_frame(name=TICKETS).reset_index()
+        ticket_data.plot.line(y=TICKETS, x=RESOLVED, ax=axis, c="tab:olive", lw=3, label="Total Tickets")
+
+        avg_tickets = ticket_data[TICKETS].mean()
+        ticket_data.loc[:, AVERAGE] = avg_tickets
+        ticket_data.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:green", lw=2, label="Monthly Avg ({0:.1f})".format(avg_tickets))
+
+        points_data = pd.pivot_table(team_data, values=[STORY_POINTS], index=[pd.Grouper(key=RESOLVED, freq='M')], aggfunc={STORY_POINTS: np.sum}).reset_index()
+        points_data.plot.line(y=STORY_POINTS, x=RESOLVED, ax=axis, c="tab:blue", lw=3, label="Total Story Points")
+
+        avg_points = points_data[STORY_POINTS].mean()
+        points_data.loc[:, AVERAGE] = avg_points
+        points_data.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:cyan", lw=2, label="Monthly Avg ({0:.1f})".format(avg_points))
+
+        axis.set_title(team_name, loc="left")
+        axis.set_xlabel("")
+        if show_ylabel:
+            axis.set_ylabel("Number Completed")
+        else:
+            axis.set_ylabel("")
+
+        self.__set_monthly_yticks(axis, False)
+
+        # Add key
+        axis.legend(loc='best', fontsize='small', labelspacing=0.2)
+
+        # Save data as excel tab
+        points_data.to_excel(writer, sheet_name="{0}_Points".format(team_name))
+
+
+    def __set_yticks(self, axis):
+        next = 0
+        yticks = []
+
+        start, end = axis.get_ylim()
+        while next <= end:
+            yticks.append(next)
+            if next <= 25 and end <=220:
+                next += 5
+            else:
+                next += 10
+        
+        axis.yaxis.set_ticks(yticks)
+
+
+    def __plot_weekly_team_stats(self, team_name, data, axis, writer, show_ylabel, column_type):
+        # Filter data for team
+        team_data = data.loc[data["Team"] == team_name].copy()
+        if len(team_data) == 0:
+            return
+
+        legend_label = ""
+        if column_type == self.Columns.CYCLE:
+            data_column = CYCLE_DAYS
+            legend_label = "Cycle Time"
+        elif column_type == self.Columns.LEAD:
+            data_column = LEAD_DAYS
+            legend_label = "Lead Time"
+
+        average = team_data[data_column].mean()
+        team_data.loc[:, AVERAGE] = average
+
+        data_avg = pd.pivot_table(team_data, values=[AVERAGE], index=[pd.Grouper(key=RESOLVED, freq='W')]).reset_index()
+        data_time = pd.pivot_table(team_data, values=[data_column], index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: np.mean}).reset_index()
+        data_min = pd.pivot_table(team_data, values=data_column, index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: min}).reset_index()
+        data_max = pd.pivot_table(team_data, values=data_column, index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: max}).reset_index()
+
+        data_avg.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:red", lw=2, label="Average ({0:.1f})".format(average))
+        data_time.plot.line(y=data_column, x=RESOLVED, ax=axis, c="tab:green", lw=3, label=legend_label)
+        data_min.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c="tab:blue", s=35, label="Min")
+        data_max.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c="tab:purple", s=35, label="Max")
+
+        axis.set_title(team_name, loc="left")
+        axis.set_xlabel("")
+        if show_ylabel:
+            axis.set_ylabel("Days")
+        else:
+            axis.set_ylabel("")
+
+        self.__set_yticks(axis)
+
+        # Add key
+        axis.legend(loc='upper right', bbox_to_anchor=(1.01, 1.07), ncol=2, fontsize='small', labelspacing=0.2)
+
+        # Save data as excel tab
+        team_data.to_excel(writer, sheet_name="{0}_{1}".format(team_name, column_type.name))
+        
 
     def __get_teams_str(self, teams):
         teams_str = ""
@@ -55,16 +188,11 @@ class jira_graph(object):
 
 
     def __generate_output_filename(self, input_file, teams):
-        filename = ""
-        if input_file.endswith("_DETAIL.csv"):
-            filename = input_file[0:len(input_file) - 11]
-        if input_file.endswith("_SUMMARY.csv"):
-            filename = input_file[0:len(input_file) - 12]
-    
+        filename = input_file[0:len(input_file) - 12]
         return filename + self.__get_teams_str(teams)
 
 
-    def create_graph(self, input_file, teams):
+    def create_ticket_graphs_by_team(self, input_file, teams):
         if len(input_file) == 0:
             print("Failed to create graph (empty filename)")
         else:
@@ -73,22 +201,23 @@ class jira_graph(object):
             output_file_png = "{0}.png".format(filename)
 
             # Use parse_dates to correctly format column data as datetime
-            data = pd.read_csv(input_file, delimiter=',', encoding="ISO-8859-1", parse_dates=['Resolved'])
+            data = pd.read_csv(input_file, delimiter=',', encoding="ISO-8859-1", parse_dates=[RESOLVED])
         
             # Only report on "Done" issues
-            data = data.loc[data["Status"] == "Done"]
+            data = data.loc[data[STATUS] == "Done"]
+            if len(data) == 0:
+                return
 
             # Create separate graphs, 1 for each team
-            # Use subplot_kw={'ylim': (0,70)} to set y-axis range
             number_of_teams = len(teams)
-            fig, axes = plt.subplots(nrows=1, ncols=number_of_teams)
+            fig, axes = plt.subplots(nrows=4, ncols=number_of_teams)
 
             fig_width = (number_of_teams * 3.5) + (10 - number_of_teams)
             if number_of_teams == 1:
                 fig_width = 6
 
             fig.set_figwidth(fig_width)
-            fig.set_figheight(5)
+            fig.set_figheight(40)
         
             with pd.ExcelWriter(output_file_xlsx) as writer:
                 axis_index = 0
@@ -96,11 +225,13 @@ class jira_graph(object):
                 for team in teams:
                     show_ylabel = axis_index == 0
 
-                    self.__plot_team_ticket_totals(team, data, axes if number_of_teams == 1 else axes[axis_index], writer, show_ylabel)
-                    axis_index += 1
+                    self.__plot_monthly_team_ticket_categories(team, data, axes if number_of_teams == 1 else axes[0, axis_index], writer, show_ylabel)
+                    self.__plot_monthly_team_ticket_totals(team, data, axes if number_of_teams == 1 else axes[1, axis_index], writer, show_ylabel)
 
-            fig.autofmt_xdate(rotation=45)
-            #plt.show()
+                    self.__plot_weekly_team_stats(team, data, axes if number_of_teams == 1 else axes[2,axis_index], writer, show_ylabel, self.Columns.CYCLE)
+                    self.__plot_weekly_team_stats(team, data, axes if number_of_teams == 1 else axes[3,axis_index], writer, show_ylabel, self.Columns.LEAD)
+
+                    axis_index += 1
 
             # Save graph
             plt.savefig(output_file_png)
