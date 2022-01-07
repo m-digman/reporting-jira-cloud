@@ -164,47 +164,67 @@ class jira_graph(object):
         filename = input_file[0:len(input_file) - 12]
         return filename + self.__get_teams_str(teams)
 
+    
+    def __find_matching_teams_to_show(self, requested_teams, teams_in_data):
+        teams_to_show = []
+        for team_name in requested_teams:
+            if team_name in teams_in_data and team_name not in teams_to_show:
+                teams_to_show.append(team_name)
+
+        return teams_to_show
+
 
     def create_ticket_graphs_by_team(self, input_file, teams):
         if len(input_file) == 0:
             print("Failed to create graph (empty filename)")
         else:
-            filename = self.__generate_output_filename(input_file, teams)
-            output_file_xlsx = "{0}.xlsx".format(filename)
-            output_file_png = "{0}.png".format(filename)
-
             # Use parse_dates to correctly format column data as datetime
-            data = pd.read_csv(input_file, delimiter=',', encoding="ISO-8859-1", parse_dates=[RESOLVED])
+            data = pd.read_csv(input_file, delimiter=',', encoding="UTF-8", parse_dates=[RESOLVED])
         
             # Only report on "Done" issues
             data = data.loc[data[STATUS] == "Done"]
             if len(data) == 0:
                 return
 
-            # Create separate graphs, 1 for each team
-            number_of_teams = len(teams)
-            fig, axes = plt.subplots(nrows=4, ncols=number_of_teams)
+            teams_to_show = self.__find_matching_teams_to_show(teams, data[TEAM].unique())
+            number_of_teams = len(teams_to_show)
+
+            filename = self.__generate_output_filename(input_file, teams_to_show)
+            output_file_xlsx = "{0}.xlsx".format(filename)
+            output_file_png = "{0}.png".format(filename)
+
+            # Use a single row for one team, otherwise use columns to represent each team
+            graph_rows = 4
+            graph_columns = number_of_teams
+            if number_of_teams == 1:
+                graph_rows = 1
+                graph_columns = 4
+
+            fig, axes = plt.subplots(nrows=graph_rows, ncols=graph_columns)
 
             fig_width = (number_of_teams * 4) + (10 - number_of_teams)
+            fig_height = 40
             if number_of_teams == 1:
-                fig_width = 6
+                fig_width = 30
+                fig_height = 12
 
             fig.set_figwidth(fig_width)
-            fig.set_figheight(40)
+            fig.set_figheight(fig_height)
         
             with pd.ExcelWriter(output_file_xlsx) as writer:
                 axis_index = 0
 
-                for team in teams:
+                #for team in teams:
+                for team in teams_to_show:
                     show_ylabel = axis_index == 0
 
                     # Filter data for team
-                    team_data = data.loc[data["Team"] == team].copy()
-                    if len(team_data) > 0:
-                        self.__plot_monthly_team_ticket_categories(team, team_data, axes if number_of_teams == 1 else axes[0, axis_index], writer, show_ylabel)
-                        self.__plot_monthly_team_ticket_totals(team, team_data, axes if number_of_teams == 1 else axes[1, axis_index], writer, show_ylabel)
-                        self.__plot_weekly_team_stats(team, team_data, axes if number_of_teams == 1 else axes[2,axis_index], writer, show_ylabel, self.Columns.CYCLE)
-                        self.__plot_weekly_team_stats(team, team_data, axes if number_of_teams == 1 else axes[3,axis_index], writer, show_ylabel, self.Columns.LEAD)
+                    team_data = data.loc[data[TEAM] == team].copy()
+
+                    self.__plot_monthly_team_ticket_categories(team, team_data, axes[0] if number_of_teams == 1 else axes[0, axis_index], writer, show_ylabel)
+                    self.__plot_monthly_team_ticket_totals(team, team_data, axes[1] if number_of_teams == 1 else axes[1, axis_index], writer, show_ylabel)
+                    self.__plot_weekly_team_stats(team, team_data, axes[2] if number_of_teams == 1 else axes[2,axis_index], writer, show_ylabel, self.Columns.CYCLE)
+                    self.__plot_weekly_team_stats(team, team_data, axes[3] if number_of_teams == 1 else axes[3,axis_index], writer, show_ylabel, self.Columns.LEAD)
 
                     axis_index += 1
 

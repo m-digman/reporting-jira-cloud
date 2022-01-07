@@ -48,15 +48,6 @@ def get_default_filter_id():
         print("Error: no filters are configured")
 
 
-def get_unique_team_names():
-    teams_to_show = []
-    for team_name in jira_lookup.teams:
-        if team_name not in teams_to_show:
-            teams_to_show.append(team_name)
-
-    return teams_to_show
-
-
 def show_usage():
     print("Usage:\r\n======")
     print("  report.py")
@@ -68,7 +59,7 @@ def show_usage():
 
 
 def main():
-    configured_teams = get_unique_team_names()
+    configured_teams = jira_lookup.teams
 
     args = sys.argv[1:]
     if len(args) == 0:

@@ -1,7 +1,6 @@
 from requests.models import HTTPError
 from jira_request import jira_request
 from datetime import datetime
-from enum import Enum, auto
 import csv
 import os
 import os.path
@@ -32,7 +31,7 @@ class jira_data(object):
         self.__create_folder(path)
 
         filename = "{0}//{1:%d}_tickets.csv".format(path, today)
-        with open(filename, 'w', newline='') as file:
+        with open(filename, 'w', newline='', encoding="UTF-8") as file:
             writer = csv.writer(file)
             writer.writerow(self.__csv_columns)
             writer.writerows(rows)
@@ -67,12 +66,13 @@ class jira_data(object):
             for value in data:
                 values = value.split("_*:*_")
 
-                status = self.__jira_api.get_status_name(values[0]).lower()
-                # print(status)
-                if status == "to do":
-                    to_do = int(values[2])
-                elif status == "in progress":
-                    in_progress = int(values[2])
+                status = self.__jira_api.get_status_name(values[0])
+                if status:
+                    status = status.lower()
+                    if status == "to do":
+                        to_do = int(values[2])
+                    elif status == "in progress":
+                        in_progress = int(values[2])
 
         return to_do, in_progress
 
