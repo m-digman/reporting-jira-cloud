@@ -27,36 +27,22 @@ class jira_graph(object):
         self.__config = jira_config
 
 
-    def __plot_monthly_team_ticket_categories(self, team_name, data, axis, writer, show_ylabel):
-        # Filter data for team
-        team_data = data.loc[data[TEAM] == team_name]
-        if len(team_data) == 0:
-            return
-
+    def __plot_monthly_team_ticket_categories(self, team_name, team_data, axis, writer, show_ylabel):
         # Get monthly ticket count for each category 
         team_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='M'), CATEGORY]).size().to_frame(name=TICKETS).reset_index()
         # Change column to Year-Month (Bug: https://github.com/pandas-dev/pandas/issues/4387)
         team_data[RESOLVED] = team_data[RESOLVED].dt.strftime('%m/%y')
-        # Pivot data for reporting in graph
         team_data = team_data.pivot_table(values=TICKETS, index=[RESOLVED], columns=CATEGORY).fillna(0)
-        # Total tickets completed for each month
-        ticket_total = team_data.sum(axis=1).to_frame(name=TOTAL).reset_index()
-
-        # Plot data in graph (Colours: https://matplotlib.org/stable/gallery/color/named_colors.html)
         team_data.plot.bar(ax=axis, color=self.__config.category_colours, stacked=True)
 
+        # Total tickets completed for each month
+        ticket_total = team_data.sum(axis=1).to_frame(name=TOTAL).reset_index()
         average = ticket_total[TOTAL].mean()
         ticket_total.loc[:, AVERAGE] = average
         ticket_total.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:green", lw=2, label="Monthly Avg ({0:.1f})".format(average))
 
-        axis.set_title(team_name, loc="left")
-        axis.set_xlabel("")
-        if show_ylabel:
-            axis.set_ylabel("Tickets Completed")
-        else:
-            axis.set_ylabel("")
-
-        self.__set_monthly_yticks(axis, True)
+        self.__set_labels(axis, team_name, "Tickets Completed" if show_ylabel else "")
+        self.__set_ticket_yticks(axis, True)
 
         # Add key
         axis.legend(loc='best', fontsize='small', labelspacing=0.2)
@@ -69,7 +55,7 @@ class jira_graph(object):
         ticket_total.to_excel(writer, sheet_name="{0}_Total".format(team_name))
 
 
-    def __set_monthly_yticks(self, axis, start_from_zero):
+    def __set_ticket_yticks(self, axis, start_from_zero):
         next = 0
         yticks = []
 
@@ -85,12 +71,7 @@ class jira_graph(object):
         axis.yaxis.set_ticks(yticks)
 
 
-    def __plot_monthly_team_ticket_totals(self, team_name, data, axis, writer, show_ylabel):
-        # Filter data for team
-        team_data = data.loc[data[TEAM] == team_name].copy()
-        if len(team_data) == 0:
-            return
-
+    def __plot_monthly_team_ticket_totals(self, team_name, team_data, axis, writer, show_ylabel):
         ticket_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='M')]).size().to_frame(name=TICKETS).reset_index()
         ticket_data.plot.line(y=TICKETS, x=RESOLVED, ax=axis, c="tab:olive", lw=3, label="Total Tickets")
 
@@ -105,20 +86,23 @@ class jira_graph(object):
         points_data.loc[:, AVERAGE] = avg_points
         points_data.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:cyan", lw=2, label="Monthly Avg ({0:.1f})".format(avg_points))
 
-        axis.set_title(team_name, loc="left")
-        axis.set_xlabel("")
-        if show_ylabel:
-            axis.set_ylabel("Number Completed")
-        else:
-            axis.set_ylabel("")
-
-        self.__set_monthly_yticks(axis, False)
+        self.__set_labels(axis, team_name, "Number Completed" if show_ylabel else "")
+        self.__set_ticket_yticks(axis, False)
 
         # Add key
         axis.legend(loc='best', fontsize='small', labelspacing=0.2)
 
         # Save data as excel tab
         points_data.to_excel(writer, sheet_name="{0}_Points".format(team_name))
+
+
+    def __set_labels(self, axis, team_name, label_text):
+        axis.set_title(team_name, loc="left")
+        axis.set_xlabel("")
+        axis.set_ylabel(label_text)
+
+        for label in axis.get_xticklabels(which='both'):
+            label.set(rotation=45, horizontalalignment='right')
 
 
     def __set_yticks(self, axis):
@@ -136,12 +120,7 @@ class jira_graph(object):
         axis.yaxis.set_ticks(yticks)
 
 
-    def __plot_weekly_team_stats(self, team_name, data, axis, writer, show_ylabel, column_type):
-        # Filter data for team
-        team_data = data.loc[data["Team"] == team_name].copy()
-        if len(team_data) == 0:
-            return
-
+    def __plot_weekly_team_stats(self, team_name, team_data, axis, writer, show_ylabel, column_type):
         legend_label = ""
         if column_type == self.Columns.CYCLE:
             data_column = CYCLE_DAYS
@@ -163,17 +142,11 @@ class jira_graph(object):
         data_min.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c="tab:blue", s=35, label="Min")
         data_max.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c="tab:purple", s=35, label="Max")
 
-        axis.set_title(team_name, loc="left")
-        axis.set_xlabel("")
-        if show_ylabel:
-            axis.set_ylabel("Days")
-        else:
-            axis.set_ylabel("")
-
+        self.__set_labels(axis, team_name, "Days" if show_ylabel else "")
         self.__set_yticks(axis)
 
         # Add key
-        axis.legend(loc='upper right', bbox_to_anchor=(1.01, 1.07), ncol=2, fontsize='small', labelspacing=0.2)
+        axis.legend(loc='upper right', bbox_to_anchor=(1.01, 1.08), ncol=2, fontsize='small', labelspacing=0.2)
 
         # Save data as excel tab
         team_data.to_excel(writer, sheet_name="{0}_{1}".format(team_name, column_type.name))
@@ -212,7 +185,7 @@ class jira_graph(object):
             number_of_teams = len(teams)
             fig, axes = plt.subplots(nrows=4, ncols=number_of_teams)
 
-            fig_width = (number_of_teams * 3.5) + (10 - number_of_teams)
+            fig_width = (number_of_teams * 4) + (10 - number_of_teams)
             if number_of_teams == 1:
                 fig_width = 6
 
@@ -225,11 +198,13 @@ class jira_graph(object):
                 for team in teams:
                     show_ylabel = axis_index == 0
 
-                    self.__plot_monthly_team_ticket_categories(team, data, axes if number_of_teams == 1 else axes[0, axis_index], writer, show_ylabel)
-                    self.__plot_monthly_team_ticket_totals(team, data, axes if number_of_teams == 1 else axes[1, axis_index], writer, show_ylabel)
-
-                    self.__plot_weekly_team_stats(team, data, axes if number_of_teams == 1 else axes[2,axis_index], writer, show_ylabel, self.Columns.CYCLE)
-                    self.__plot_weekly_team_stats(team, data, axes if number_of_teams == 1 else axes[3,axis_index], writer, show_ylabel, self.Columns.LEAD)
+                    # Filter data for team
+                    team_data = data.loc[data["Team"] == team].copy()
+                    if len(team_data) > 0:
+                        self.__plot_monthly_team_ticket_categories(team, team_data, axes if number_of_teams == 1 else axes[0, axis_index], writer, show_ylabel)
+                        self.__plot_monthly_team_ticket_totals(team, team_data, axes if number_of_teams == 1 else axes[1, axis_index], writer, show_ylabel)
+                        self.__plot_weekly_team_stats(team, team_data, axes if number_of_teams == 1 else axes[2,axis_index], writer, show_ylabel, self.Columns.CYCLE)
+                        self.__plot_weekly_team_stats(team, team_data, axes if number_of_teams == 1 else axes[3,axis_index], writer, show_ylabel, self.Columns.LEAD)
 
                     axis_index += 1
 

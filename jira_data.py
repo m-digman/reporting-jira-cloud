@@ -5,7 +5,6 @@ from enum import Enum, auto
 import csv
 import os
 import os.path
-from pprint import pprint
 
 
 class jira_data(object):
