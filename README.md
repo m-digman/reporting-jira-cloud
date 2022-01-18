@@ -9,7 +9,7 @@ Script for extracting data from Jira Cloud API's for reporting purposes using a 
 ## v2.0 (Jan 2022)
 - Standardise .CSV output file columns (merged summary and details to one file)
 - Added support for issues in team-managed Jira projects (different column for Epics and Story Points)
-- Added new graphs to include monthly story points and and weekly breakdown of lead and cycle times
+- Added new graphs to include monthly story points and weekly breakdown of lead and cycle times
 ## v1.1 (Nov 2021)
 - Added support for teams with their own project, rather than just using labels in the same project
 
@@ -25,7 +25,7 @@ git update-index --skip-worktree jira_conf.yaml
 Create an API Token against your Atlassian account and store it somewhere safe:
 https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/
 
-Edit jira_conf.yaml and set the url, user and token. These are the values speciific to your Jira instance, example:
+Edit jira_conf.yaml and set the url, user and token. These are the values specific to your Jira instance, example:
 ```yaml
 - jira:
     url: https://your-domain.atlassian.net

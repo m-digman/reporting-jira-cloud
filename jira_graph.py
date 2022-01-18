@@ -41,7 +41,8 @@ class jira_graph(object):
         ticket_total.loc[:, AVERAGE] = average
         ticket_total.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:green", lw=2, label="Monthly Avg ({0:.1f})".format(average))
 
-        self.__set_labels(axis, team_name, "Tickets Completed" if show_ylabel else "")
+        ylabel = "Tickets Completed" if show_ylabel else ""
+        self.__set_labels(axis, team_name, ylabel)
         self.__set_ticket_yticks(axis, True)
 
         # Add key
@@ -86,7 +87,8 @@ class jira_graph(object):
         points_data.loc[:, AVERAGE] = avg_points
         points_data.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:cyan", lw=2, label="Monthly Avg ({0:.1f})".format(avg_points))
 
-        self.__set_labels(axis, team_name, "Number Completed" if show_ylabel else "")
+        ylabel = "Number Completed" if show_ylabel else ""
+        self.__set_labels(axis, team_name, ylabel)
         self.__set_ticket_yticks(axis, False)
 
         # Add key
@@ -96,10 +98,10 @@ class jira_graph(object):
         points_data.to_excel(writer, sheet_name="{0}_Points".format(team_name))
 
 
-    def __set_labels(self, axis, team_name, label_text):
+    def __set_labels(self, axis, team_name, ylabel_text):
         axis.set_title(team_name, loc="left")
         axis.set_xlabel("")
-        axis.set_ylabel(label_text)
+        axis.set_ylabel(ylabel_text)
 
         for label in axis.get_xticklabels(which='both'):
             label.set(rotation=45, horizontalalignment='right')
@@ -142,7 +144,8 @@ class jira_graph(object):
         data_min.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c="tab:blue", s=35, label="Min")
         data_max.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c="tab:purple", s=35, label="Max")
 
-        self.__set_labels(axis, team_name, "Days" if show_ylabel else "")
+        ylabel = "Days" if show_ylabel else ""
+        self.__set_labels(axis, team_name, ylabel)
         self.__set_yticks(axis)
 
         # Add key
@@ -214,17 +217,16 @@ class jira_graph(object):
             with pd.ExcelWriter(output_file_xlsx) as writer:
                 axis_index = 0
 
-                #for team in teams:
-                for team in teams_to_show:
+                for team_name in teams_to_show:
                     show_ylabel = axis_index == 0
 
                     # Filter data for team
-                    team_data = data.loc[data[TEAM] == team].copy()
+                    team_data = data.loc[data[TEAM] == team_name].copy()
 
-                    self.__plot_monthly_team_ticket_categories(team, team_data, axes[0] if number_of_teams == 1 else axes[0, axis_index], writer, show_ylabel)
-                    self.__plot_monthly_team_ticket_totals(team, team_data, axes[1] if number_of_teams == 1 else axes[1, axis_index], writer, show_ylabel)
-                    self.__plot_weekly_team_stats(team, team_data, axes[2] if number_of_teams == 1 else axes[2,axis_index], writer, show_ylabel, self.Columns.CYCLE)
-                    self.__plot_weekly_team_stats(team, team_data, axes[3] if number_of_teams == 1 else axes[3,axis_index], writer, show_ylabel, self.Columns.LEAD)
+                    self.__plot_monthly_team_ticket_categories(team_name, team_data, axes[0] if number_of_teams == 1 else axes[0, axis_index], writer, show_ylabel)
+                    self.__plot_monthly_team_ticket_totals(team_name, team_data, axes[1] if number_of_teams == 1 else axes[1, axis_index], writer, show_ylabel)
+                    self.__plot_weekly_team_stats(team_name, team_data, axes[2] if number_of_teams == 1 else axes[2,axis_index], writer, show_ylabel, self.Columns.CYCLE)
+                    self.__plot_weekly_team_stats(team_name, team_data, axes[3] if number_of_teams == 1 else axes[3,axis_index], writer, show_ylabel, self.Columns.LEAD)
 
                     axis_index += 1
 
