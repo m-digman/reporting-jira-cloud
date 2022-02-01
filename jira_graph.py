@@ -31,7 +31,7 @@ class jira_graph(object):
         # Get monthly ticket count for each category 
         team_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='M'), CATEGORY]).size().to_frame(name=TICKETS).reset_index()
         # Change column to Year-Month (Bug: https://github.com/pandas-dev/pandas/issues/4387)
-        team_data[RESOLVED] = team_data[RESOLVED].dt.strftime('%m/%y')
+        team_data[RESOLVED] = team_data[RESOLVED].dt.strftime('%Y-%m')
         team_data = team_data.pivot_table(values=TICKETS, index=[RESOLVED], columns=CATEGORY).fillna(0)
         team_data.plot.bar(ax=axis, color=self.__config.category_colours, stacked=True)
 
@@ -57,17 +57,17 @@ class jira_graph(object):
 
 
     def __set_ticket_yticks(self, axis, start_from_zero):
-        next = 0
+        next_tick = 0
         yticks = []
 
         start, end = axis.get_ylim()
-        while next <= end:
-            if start_from_zero or next > start:
-                yticks.append(next)
+        while next_tick <= end:
+            if start_from_zero or next_tick > start:
+                yticks.append(next_tick)
             if end > 100:
-                next += 10
+                next_tick += 10
             else:
-                next += 5
+                next_tick += 5
         
         axis.yaxis.set_ticks(yticks)
 
@@ -108,16 +108,16 @@ class jira_graph(object):
 
 
     def __set_yticks(self, axis):
-        next = 0
+        next_tick = 0
         yticks = []
 
         start, end = axis.get_ylim()
-        while next <= end:
-            yticks.append(next)
-            if next <= 25 and end <=220:
-                next += 5
+        while next_tick <= end:
+            yticks.append(next_tick)
+            if next_tick <= 25 and end <=220:
+                next_tick += 5
             else:
-                next += 10
+                next_tick += 10
         
         axis.yaxis.set_ticks(yticks)
 

@@ -65,7 +65,8 @@ class jira_config(object):
 
     @property
     def teams(self):
-        return list(self.__teams.values())
+        # don't return duplicates
+        return list(dict.fromkeys(self.__teams.values()))
 
 
     def find_team(self, labels):

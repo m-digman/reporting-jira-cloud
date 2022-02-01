@@ -5,6 +5,7 @@
 - team:
     team1: My team
     team2: Another team
+    team3: Another team
 - category:
     project: Project,peru
     improvement: Product,royalblue

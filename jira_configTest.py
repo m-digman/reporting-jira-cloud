@@ -64,7 +64,7 @@ class jira_config_test(unittest.TestCase):
         self.assertEqual(actual, "darkviolet")
 
 
-    def test_teams_returned(self):
+    def test_no_duplicate_teams_returned(self):
         actual = self.config.teams
         self.assertEqual(actual, ["My team", "Another team"])
 

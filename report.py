@@ -31,7 +31,7 @@ def parse_teams(configured_teams, teams):
         if stripped_team_name in configured_teams:
             teams_to_show.append(stripped_team_name)
         else: 
-            print("Unknown team: \"{0}\". Options are {1}".format(team_name, configured_teams))    
+            print("Unknown team: \"{0}\". Options are: {1}".format(team_name, ", ".join(configured_teams)))    
 
     if len(teams_to_show) == 0:
         print("No teams recognised: {0}, using configured teams".format(teams))
