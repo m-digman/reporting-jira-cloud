@@ -1,6 +1,11 @@
 import unittest
 from jira_config import jira_config
 
+ANOTHER_TEAM = "Another team"
+BAU = "BAU"
+MY_TEAM = "My team"
+TEAM_2 = "team2"
+UNKNOWN = "Unknown"
 
 class jira_config_test(unittest.TestCase):
 
@@ -10,18 +15,18 @@ class jira_config_test(unittest.TestCase):
 
 
     def test_uppercase_team_is_found(self):
-        actual = self.config.find_team(["TEAM1", "project", "team2"])
-        self.assertEqual(actual, "My team")
+        actual = self.config.find_team(["TEAM1", "project", TEAM_2])
+        self.assertEqual(actual, MY_TEAM)
 
 
     def test_mixed_case_team_is_found(self):
-        actual = self.config.find_team(["Team1", "product", "team2"])
-        self.assertEqual(actual, "My team")
+        actual = self.config.find_team(["Team1", "product", TEAM_2])
+        self.assertEqual(actual, MY_TEAM)
 
 
     def test_lowercase_team_is_found(self):
-        actual = self.config.find_team(["bau", "team2", "team1"])
-        self.assertEqual(actual, "Another team")
+        actual = self.config.find_team(["bau", TEAM_2, "team1"])
+        self.assertEqual(actual, ANOTHER_TEAM)
 
 
     def test_uppercase_category_is_found(self):
@@ -30,18 +35,18 @@ class jira_config_test(unittest.TestCase):
 
 
     def test_mixed_case_category_is_found(self):
-        actual = self.config.find_category(["Improvement", "team2"])
+        actual = self.config.find_category(["Improvement", TEAM_2])
         self.assertEqual(actual, "Product")
 
 
     def test_lowercase_category_is_found(self):
-        actual = self.config.find_category(["bau", "team2"])
-        self.assertEqual(actual, "BAU")
+        actual = self.config.find_category(["bau", TEAM_2])
+        self.assertEqual(actual, BAU)
 
 
     def test_no_match_returns_unknown_category(self):
         actual = self.config.find_category(["QA"])
-        self.assertEqual(actual, "Unknown")
+        self.assertEqual(actual, UNKNOWN)
 
 
     def test_find_filter_id(self):
@@ -55,18 +60,18 @@ class jira_config_test(unittest.TestCase):
 
 
     def test_unknown_category_returned_if_not_configured(self):
-        actual = self.config.category_colours.get("Unknown")
+        actual = self.config.category_colours.get(UNKNOWN)
         self.assertIsNotNone(actual)
 
 
     def test_category_bau_is_darkviolet(self):
-        actual = self.config.category_colours.get("BAU")
+        actual = self.config.category_colours.get(BAU)
         self.assertEqual(actual, "darkviolet")
 
 
     def test_no_duplicate_teams_returned(self):
         actual = self.config.teams
-        self.assertEqual(actual, ["My team", "Another team"])
+        self.assertEqual(actual, [MY_TEAM, ANOTHER_TEAM])
 
 
     def test_base_url_returned(self):

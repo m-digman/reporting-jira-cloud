@@ -114,8 +114,10 @@ class jira_graph(object):
         start, end = axis.get_ylim()
         while next_tick <= end:
             yticks.append(next_tick)
-            if next_tick <= 25 and end <=220:
+            if next_tick < 40 and end <=220:
                 next_tick += 5
+            elif next_tick >= 80 and end > 400:
+                next_tick += 20
             else:
                 next_tick += 10
         
