@@ -6,6 +6,8 @@ Script for extracting data from Jira Cloud API's for reporting purposes using a 
 - See requirements.txt (use: pip install -r requirements.txt)
 
 # Update
+## v2.1 (Mar 2022)
+- Added new pie charts report for number of tickets in epics grouped by status (epics.py)
 ## v2.0 (Jan 2022)
 - Standardise .CSV output file columns (merged summary and details to one file)
 - Added support for issues in team-managed Jira projects (different column for Epics and Story Points)
