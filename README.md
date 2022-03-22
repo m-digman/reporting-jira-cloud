@@ -92,6 +92,17 @@ The total number of issues extracted, and the name of the file created are outpu
 
 ## report.py
 Uses the underlying code in extract.py to generate a .CSV using a Jira Filter ID, then pivots the data to create team graphs (.PNG) covering a monthly view of the number of issues and story points completed and a weekly breakdown of lead and cycle times. An Excel spreadsheet (.XLSX) containing this pivot data is also created. A pre-generated .CSV file created by extract.py can also be passed in, so it's possible to skip the initial data extraction phase. Any issues that don't have a status of "Done" are not included in the graph or spreadsheet. The team and category labels defined in jira_conf.yaml are used to drive the data displayed, though it is possible to specify which team data is displayed in the graph. On successful completion, the names of the files generated are output.
+## epics.py
+Uses the underlying code in extract.py to generate a .CSV using a Jira Filter ID and generates a .PNG containing pie charts for the tickets in each epic grouped by status. The radius of each pie chart indicates the ratio of tickets in the epic compared to the others. Code assumes the project has the following issue states
+- To Do
+- In Progress
+- Ready to Release
+- Done
+- Rejected
+### Example filter JQL for tickets with epics for team-managed projects
+```sql
+project = ABC AND type not in (Epic, Sub-task) AND parent is not EMPTY ORDER BY parent ASC
+```
 # Run
 Generates a .PNG, .XLSX and .CSV file for each team defined in jira_conf.yaml, using the first filter configured
 ```python
@@ -128,4 +139,8 @@ Generates a .CSV file for the filter id or filter defined in jira_conf.yaml
 ```python
 py extract.py 12345
 py extract.py work_done
+```
+Generates a .PNG and .CSV file for the number of tickets in each epic grouped by status
+```python
+py epics.py 12345
 ```
