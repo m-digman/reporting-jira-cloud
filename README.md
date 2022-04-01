@@ -107,12 +107,7 @@ The total number of issues extracted, and the name of the file created are outpu
 ## report.py
 Uses the underlying code in extract.py to generate a .CSV using a Jira Filter ID, then pivots the data to create team graphs (.PNG) covering a monthly view of the number of issues and story points completed and a weekly breakdown of lead and cycle times. An Excel spreadsheet (.XLSX) containing this pivot data is also created. A pre-generated .CSV file created by extract.py can also be passed in, so it's possible to skip the initial data extraction phase. Any issues that don't have a status of "Done" are not included in the graph or spreadsheet. The team and category labels defined in jira_conf.yaml are used to drive the data displayed, though it is possible to specify which team data is displayed in the graph. On successful completion, the names of the files generated are output.
 ## epics.py
-Uses the underlying code in extract.py to generate a .CSV using a Jira Filter ID and generates a .PNG containing pie charts for the tickets in each epic grouped by status. The radius of each pie chart indicates the ratio of tickets in the epic compared to the others. Code assumes the project has the following issue states
-- To Do
-- In Progress
-- Ready to Release
-- Done
-- Rejected
+Uses the underlying code in extract.py to generate a .CSV using a Jira Filter ID and generates two .PNG files containing pie charts for the tickets in each epic grouped by status. One set of charts for completed epics, epcis that only contain Done & Rejected tickets, and the other for active epics. The radius of each pie chart indicates the ratio of tickets in the epic compared to the others. Active epics are ordered by the number of "To Do" tickets and Completed epics are ordered by the total number if tickets in the epic. The colours used for the issue states are configured in the yaml file in the "status" section (see "Lookups" above). If the filter used includes tickets the don't have a parent epic, then these are grouped together under "NO EPIC".
 ### Example filter JQL for all epics with child tickets in a project
 #### team-managed projects:
 ```sql
@@ -159,7 +154,7 @@ Generates a .CSV file for the filter id or filter defined in jira_conf.yaml
 py extract.py 12345
 py extract.py work_done
 ```
-Generates a .PNG and .CSV file for the number of tickets in each epic grouped by status
+Generates a .CSV and .PNG file(s) for the number of tickets in each epic grouped by status
 ```python
 py epics.py 12345
 ```
