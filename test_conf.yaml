@@ -1,14 +1,16 @@
-- jira:
+jira:
     url: https://your-domain.atlassian.net/
     user: me@example.com
     token: my-api-token
-- team:
+team:
     team1: My team
     team2: Another team
     team3: Another team
-- category:
+category:
     project: Project,peru
     improvement: Product,royalblue
     bau: BAU,darkviolet
-- filter:
+status:
+    Done: tab:green
+filter:
     work_done: 12345

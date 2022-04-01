@@ -7,6 +7,7 @@ class jira_config(object):
     __categories = {}
     __category_colours = {}
     __filters = {}
+    __status_colours = {}
 
 
     def __init__(self, config_file = None):
@@ -18,14 +19,26 @@ class jira_config(object):
     def __load_config(self):
         with open(self.__jira_config_file, "r") as config_file:
             jira_config = yaml.safe_load(config_file)
-            self.__base_url = jira_config[0]["jira"]["url"]
-            self.__auth_values = jira_config[0]["jira"]["user"], jira_config[0]["jira"]["token"]
-            if len(jira_config) > 1:
-                self.__teams = jira_config[1]["team"]
-            if len(jira_config) > 2:
-                self.__load_category_config(jira_config[2]["category"])
-            if len(jira_config) > 3:
-                self.__filters = jira_config[3]["filter"]
+
+            self.__base_url = jira_config["jira"]["url"]
+            self.__auth_values = jira_config["jira"]["user"], jira_config["jira"]["token"]
+
+            try:
+                self.__teams = jira_config["team"]
+            except KeyError:
+                pass
+            try:
+                self.__load_category_config(jira_config["category"])
+            except KeyError:
+                pass
+            try:
+                self.__status_colours = jira_config["status"]
+            except KeyError:
+                pass
+            try:
+                self.__filters = jira_config["filter"]
+            except KeyError:
+                pass
 
 
     def __load_category_config(self, categories):
@@ -84,6 +97,14 @@ class jira_config(object):
                 return category
         return self.__categories.get("_unknown_")
 
-
+    
     def find_filter_id(self, filter):
         return self.__filters.get(filter)
+
+
+    def find_status_colour(self, status):
+        status_colour = self.__status_colours.get(status)
+        if status_colour is None:
+            status_colour = "tab:red"
+
+        return status_colour

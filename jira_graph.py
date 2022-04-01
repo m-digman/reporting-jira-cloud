@@ -206,6 +206,8 @@ class jira_graph(object):
                 graph_columns = 4
 
             fig, axes = plt.subplots(nrows=graph_rows, ncols=graph_columns)
+            title = filename.split("//")[2]
+            fig.suptitle(title, fontsize=24)
 
             fig_width = (number_of_teams * 4) + (10 - number_of_teams)
             fig_height = 40

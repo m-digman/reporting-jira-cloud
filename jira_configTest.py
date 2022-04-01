@@ -84,5 +84,15 @@ class jira_config_test(unittest.TestCase):
         self.assertEqual(actual, ("me@example.com", "my-api-token"))
 
 
+    def test_done_status_colour_is_tab_green(self):
+        actual = self.config.find_status_colour("In Progress")
+        self.assertEqual(actual, "tab:blue")
+
+
+    def test_unknown_status_colour_is_tab_red(self):
+        actual = self.config.find_status_colour("Ready to Release")
+        self.assertEqual(actual, "tab:red")
+
+
 if __name__ == '__main__':
     unittest.main()

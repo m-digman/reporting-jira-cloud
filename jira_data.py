@@ -26,11 +26,10 @@ class jira_data(object):
 
 
     def __create_csv(self, rows, filter_name):
-        today = datetime.now()
-        path = ".//data//{0}//{1:%Y-%m}".format(filter_name.replace("/", "_"), today)
+        path = ".//data//{0}".format(filter_name.replace("/", "_"))
         self.__create_folder(path)
 
-        filename = "{0}//{1:%d}_tickets.csv".format(path, today)
+        filename = "{0}//{1:%Y_%m_%d}_tickets.csv".format(path, datetime.now())
         with open(filename, 'w', newline='', encoding="UTF-8") as file:
             writer = csv.writer(file)
             writer.writerow(self.__csv_columns)
@@ -84,7 +83,7 @@ class jira_data(object):
             team = self.__config.find_team({project})
 
         if (len(team) == 0):
-            print("** Team Not Found [key:{0}, project:{1}, labels:{2}] ".format(key, project, labels))
+            print("** Team Not Found [key:{0}, labels:{1}] ".format(key, labels))
 
         return team
 
@@ -125,7 +124,8 @@ class jira_data(object):
                 resolution_date = resolved.date()
                 lead_time = self.__calc_date_diff_milliseconds(created, resolved)
                 lead_days = self.__calc_days_from_milliseconds(lead_time)
-                cycle_days = lead_days - self.__calc_days_from_milliseconds(to_do)
+                if to_do:
+                    cycle_days = lead_days - self.__calc_days_from_milliseconds(to_do)
 
             rows.append([jira_key, summary, category, team, status, created.date(), resolution_date, epic_name,
                          issue_type, story_points, lead_time, to_do, in_progress, lead_days, cycle_days])
