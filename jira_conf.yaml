@@ -1,12 +1,17 @@
-- jira:
+jira:
     url: https://your-domain.atlassian.net/
     user: me@example.com
     token: my-api-token
-- team:
+team:
     team1: My team
     team2: Another team
-- category:
+category:
     _unknown_: Unknown,firebrick
     project: Project,peru
-- filter:
+status:
+    To Do: silver
+    In Progress: tab:blue
+    Done: tab:green
+    Rejected: tab:olive
+filter:
     work_done: 12345
