@@ -6,18 +6,7 @@ Script for extracting data from Jira Cloud API's for reporting purposes using a 
 - See requirements.txt (use: pip install -r requirements.txt)
 
 # Update
-## v3.0 (Apr 2022)
-- Changed processing of YAML config file not to be a list (IMPORTANT: please remove list "- " from YAML sections, see test_conf.yaml as an example)
-- Moved epics.py implementation into a class (jira_epic) and status colour into the configuration YAML file
-- Changed output file names and dropped subfolder for YEAR-MONTH
-## v2.1 (Mar 2022)
-- Added new pie charts report for number of tickets in epics grouped by status (epics.py)
-## v2.0 (Jan 2022)
-- Standardise .CSV output file columns (merged summary and details to one file)
-- Added support for issues in team-managed Jira projects (different column for Epics and Story Points)
-- Added new graphs to include monthly story points and weekly breakdown of lead and cycle times
-## v1.1 (Nov 2021)
-- Added support for teams with their own project, rather than just using labels in the same project
+See Releases in GitHub repository
 
 # Configuration Setup
 The Jira authentication settings and label lookup data is stored in jira_conf.yaml
@@ -76,6 +65,7 @@ the id of the filter setup in Jira, example:
 ```yaml
 filter:
     work_done: 12345
+    team_tickets: 11111
 ```
 ### Example filter JQL for tickets resolved in the last 6 months
 ```sql
@@ -100,18 +90,18 @@ Each search generates a .CSV file in the data folder, using the filter name as a
 
 Team and Category resolution is based on labels and driven by the lookup data in jira_conf.yaml. All keys should be lowercase to enable matching.
 
-The generated .CSV file contains the following columns; "Key", "Summary", "Category", "Team", "Status", "Created", "Resolved", "Epic", "Issue Type", "Story Points", "Lead Time", "To Do", "In Progress", "Lead Days", "Cycle Days". For Jira Issues that have not been resolved (Done), "Resolved", "Lead Time", "To Do", "In Progress", "Lead Days" and "Cycle Days" will not be populated. "Lead Time", "To Do", "In Progress" are in milliseconds. All elapsed date and time values include weekends.
+The generated .CSV file contains the following columns; "Key", "Summary", "Category", "Team", "Status", "Created", "Resolved", "Epic", "Epic ID", "Issue Type", "Story Points", "Lead Time", "To Do", "In Progress", "Lead Days", "Cycle Days". For Jira Issues that have not been resolved (Done), "Resolved", "Lead Time", "To Do", "In Progress", "Lead Days" and "Cycle Days" will not be populated. "Lead Time", "To Do", "In Progress" are in milliseconds. All elapsed date and time values include weekends.
 
 The total number of issues extracted, and the name of the file created are output on successful execution. Any unresolved teams will be reported, along with the Jira Issue ID and unresolved categories will just be reported as "Unknown" in the .CSV
 
 ## report.py
 Uses the underlying code in extract.py to generate a .CSV using a Jira Filter ID, then pivots the data to create team graphs (.PNG) covering a monthly view of the number of issues and story points completed and a weekly breakdown of lead and cycle times. An Excel spreadsheet (.XLSX) containing this pivot data is also created. A pre-generated .CSV file created by extract.py can also be passed in, so it's possible to skip the initial data extraction phase. Any issues that don't have a status of "Done" are not included in the graph or spreadsheet. The team and category labels defined in jira_conf.yaml are used to drive the data displayed, though it is possible to specify which team data is displayed in the graph. On successful completion, the names of the files generated are output.
 ## epics.py
-Uses the underlying code in extract.py to generate a .CSV using a Jira Filter ID and generates two .PNG files containing pie charts for the tickets in each epic grouped by status. One set of charts for completed epics, epics that only contain Done & Rejected tickets, and the other for active epics. The radius of each pie chart indicates the ratio of tickets in the epic compared to the others. Active epics are ordered by the number of "To Do" tickets and Completed epics are ordered by the total number if tickets in the epic. The colours used for the issue states are configured in the yaml file in the "status" section (see "Lookups" above). If the filter used includes tickets that don't have a parent epic, then these are grouped together under "NO EPIC".
+Uses the underlying code in extract.py to generate a .CSV using a Jira Filter ID and generates two .PNG files containing pie charts for the tickets in each epic grouped by status. One set of charts for completed epics, epics that only contain Done & Rejected tickets, and the other for active epics. The radius of each pie chart indicates the ratio of tickets in the epic compared to the others. Active epics are ordered by the number of "To Do" tickets and Completed epics are ordered by the total number if tickets "Done". The colours used for the issue states are configured in the yaml file in the "status" section (see "Lookups" above). If the filter used includes tickets that don't have a parent epic, then these are grouped together under "NO EPIC".
 ### Example filter JQL for all epics with child tickets in a project
 #### team-managed projects:
 ```sql
-project = team-project-key AND type not in (Epic, Sub-task) AND parent is not EMPTY ORDER BY parent ASC
+project = team-project-key AND type not in (Epic, Subtask) AND parent is not EMPTY ORDER BY parent ASC
 ```
 #### company-managed projects:
 ```sql
@@ -154,7 +144,8 @@ Generates a .CSV file for the filter id or filter defined in jira_conf.yaml
 py extract.py 12345
 py extract.py work_done
 ```
-Generates a .CSV and .PNG file(s) for the number of tickets in each epic grouped by status
+Generates a .CSV and .PNG file(s) with the number of tickets in each epic grouped by status for the filter id or filter defined in jira_conf.yaml
 ```python
 py epics.py 12345
+py epics.py team_tickets
 ```

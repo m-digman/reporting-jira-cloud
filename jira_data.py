@@ -12,7 +12,7 @@ class jira_data(object):
     __params_search = "search?jql={0}&maxResults=999&startAt={1}&fields=summary,status,created,resolutiondate,labels,issuetype,parent,customfield_10014,customfield_10016,customfield_10023,customfield_10024"
     __params_issue = "issue/{0}"
     __epic_name_cache = {}
-    __csv_columns = ["Key","Summary","Category","Team","Status","Created","Resolved","Epic","Issue Type","Story Points","Lead Time","To Do","In Progress","Lead Days","Cycle Days"]
+    __csv_columns = ["Key","Summary","Category","Team","Status","Created","Resolved","Epic","Epic ID","Issue Type","Story Points","Lead Time","To Do","In Progress","Lead Days","Cycle Days"]
 
 
     def __init__(self, jira_config):
@@ -51,7 +51,6 @@ class jira_data(object):
 
 
     def __calc_days_from_milliseconds(self, milliseconds):
-        #return timedelta(milliseconds=milliseconds).days
         return round(milliseconds/(1000*60*60*24), 2)
 
 
@@ -128,7 +127,7 @@ class jira_data(object):
                     cycle_days = lead_days - self.__calc_days_from_milliseconds(to_do)
 
             rows.append([jira_key, summary, category, team, status, created.date(), resolution_date, epic_name,
-                         issue_type, story_points, lead_time, to_do, in_progress, lead_days, cycle_days])
+                         epic_id, issue_type, story_points, lead_time, to_do, in_progress, lead_days, cycle_days])
 
 
     def __retrieve_jira_epic(self, epic_id):

@@ -29,7 +29,7 @@ class jira_epic(object):
         return int(np.round(val * total / 100))
 
 
-    def __plot_data(self, epic_name, epic_data, axis, max_epic_size):
+    def __plot_data(self, epic_title, epic_data, axis, max_epic_size):
         tickets_in_epic = len(epic_data)
         radius = np.sqrt(tickets_in_epic / max_epic_size)
 
@@ -37,7 +37,7 @@ class jira_epic(object):
         colours = self.__get_colours(status_data.index)
 
         status_data.plot.pie(y=COUNT, ax=axis, autopct=lambda val: self.__absolute_value(val, tickets_in_epic), colors=colours, radius=radius)
-        axis.set_title(epic_name, loc="left")
+        axis.set_title(epic_title, loc="left")
         axis.set_ylabel("")
 
 
@@ -82,13 +82,16 @@ class jira_epic(object):
 
         for epic_name in epics:
             epic_data = data.loc[data[EPIC] == epic_name].copy()
+            epic_title = "{0} [{1}]".format(epic_name, epic_data.iloc[0]["Epic ID"])
 
-            if num_rows > 1:
+            if number_of_epics == 1:
+                axis = axes
+            elif num_rows > 1:
                 axis = axes[epic_index // num_cols, axis_col_index]
             else:
                 axis = axes[axis_col_index]
 
-            self.__plot_data(epic_name, epic_data, axis, max_epic_size)
+            self.__plot_data(epic_title, epic_data, axis, max_epic_size)
 
             epic_index += 1
             axis_col_index += 1
