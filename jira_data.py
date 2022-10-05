@@ -108,6 +108,7 @@ class jira_data(object):
             epic_name = ""
             if not epic_id:
                 try:
+                    epic_id = issue["fields"]["parent"]["key"]
                     epic_name = issue["fields"]["parent"]["fields"]["summary"]
                 except KeyError:
                     pass
@@ -147,7 +148,8 @@ class jira_data(object):
 
 
     def __search_jira(self, jql, start_at):
-        return self.__jira_api.get_api3_request(self.__params_search.format(jql, start_at))
+        url_query = self.__params_search.format(jql, start_at)
+        return self.__jira_api.get_api3_request(url_query)
 
 
     def __extract_paged_search_data(self, jql, csv_rows):
