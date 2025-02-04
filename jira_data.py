@@ -4,14 +4,13 @@ from datetime import datetime
 import csv
 import os
 import os.path
+from pprint import pprint
 
 
 class jira_data(object):
     # Docs https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/#api-rest-api-3-search-get
     __params_filter = "filter/{0}"
-    __params_search = "search?jql={0}&maxResults=999&startAt={1}&fields=summary,status,created,resolutiondate,labels,issuetype,parent,customfield_10014,customfield_10016,customfield_10023,customfield_10024"
-    __params_issue = "issue/{0}"
-    __epic_name_cache = {}
+    __params_search = "search?jql={0}&maxResults=100&startAt={1}&fields=summary,status,created,resolutiondate,labels,issuetype,parent,customfield_10014,customfield_10016,customfield_10023,customfield_10024"
     __csv_columns = ["Key","Summary","Category","Team","Status","Created","Resolved","Epic","Epic ID","Issue Type","Story Points","Lead Time","To Do","In Progress","Lead Days","Cycle Days"]
 
 
@@ -96,24 +95,21 @@ class jira_data(object):
             issue_type = issue["fields"]["issuetype"]["name"]
             created = self.__get_date_from_utc_string(issue["fields"]["created"])
             resolved = self.__get_date_from_utc_string(issue["fields"]["resolutiondate"])
-            epic_id = issue["fields"]["customfield_10014"]
             time_in_status = issue["fields"]["customfield_10023"]
+
+            epic_id, epic_name = "", ""
+            try:
+                parent = issue["fields"]["parent"]
+                if parent:
+                    epic_id = issue["fields"]["parent"]["key"]
+                    epic_name = issue["fields"]["parent"]["fields"]["summary"]
+            except KeyError:
+                pass
 
             # for team-managed projects, story point estimate is now in custom field 16
             story_points = issue["fields"]["customfield_10016"]
             if not story_points:
                 story_points = issue["fields"]["customfield_10024"]
-
-            # for team-managed projects, epics are the parent field and we don't need to lookup the name
-            epic_name = ""
-            if not epic_id:
-                try:
-                    epic_id = issue["fields"]["parent"]["key"]
-                    epic_name = issue["fields"]["parent"]["fields"]["summary"]
-                except KeyError:
-                    pass
-            if len(epic_name) == 0:
-                epic_name = self.__find_epic_name(epic_id)
 
             category = self.__config.find_category(labels)
             team = self.__get_team_name(jira_key, labels)
@@ -129,22 +125,6 @@ class jira_data(object):
 
             rows.append([jira_key, summary, category, team, status, created.date(), resolution_date, epic_name,
                          epic_id, issue_type, story_points, lead_time, to_do, in_progress, lead_days, cycle_days])
-
-
-    def __retrieve_jira_epic(self, epic_id):
-        data = self.__jira_api.get_api3_request(self.__params_issue.format(epic_id))
-        return data["fields"]["customfield_10011"]
-
-
-    def __find_epic_name(self, epic_id):
-        epic_name = ""
-        if epic_id:
-            epic_name = self.__epic_name_cache.get(epic_id)
-            if (epic_name == None):
-                epic_name = self.__retrieve_jira_epic(epic_id)
-                self.__epic_name_cache[epic_id] = epic_name
-
-        return epic_name
 
 
     def __search_jira(self, jql, start_at):
@@ -167,6 +147,8 @@ class jira_data(object):
             start_at = start_index + page_size
             is_last_page = (start_at >= total_rows)
 
+            # print("{0}, {1}, {2} (next: {3}, last: {4})".format(start_index, page_size, total_rows, start_at, is_last_page))
+
 
     def __get_jql_for_filter(self, filter_id):
         data = self.__jira_api.get_api3_request(self.__params_filter.format(filter_id))
@@ -182,7 +164,7 @@ class jira_data(object):
             csv_rows = []
             self.__extract_paged_search_data(jql, csv_rows)
             created_filename = self.__create_csv(csv_rows, filter_name)
-        except HTTPError:
-            print("Failed to find filter (id: {0})".format(filter_id))
+        except HTTPError as err:
+            print("Failed to find filter (id: {0}) - {1}".format(filter_id, err))
 
         return created_filename

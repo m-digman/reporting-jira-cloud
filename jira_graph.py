@@ -53,7 +53,7 @@ class jira_graph(object):
             axis.bar_label(container, fontsize=9, label_type="center")
 
         team_data.to_excel(writer, sheet_name="{0}_Tickets".format(team_name))
-        ticket_total.to_excel(writer, sheet_name="{0}_Total".format(team_name))
+        ticket_total.to_excel(writer, sheet_name="{0}_Total".format(team_name), index=False)
 
 
     def __set_ticket_yticks(self, axis, start_from_zero):
@@ -95,7 +95,7 @@ class jira_graph(object):
         axis.legend(loc='best', fontsize='small', labelspacing=0.2)
 
         # Save data as excel tab
-        points_data.to_excel(writer, sheet_name="{0}_Points".format(team_name))
+        points_data.to_excel(writer, sheet_name="{0}_Points".format(team_name), index=False)
 
 
     def __set_labels(self, axis, team_name, ylabel_text):
@@ -154,7 +154,7 @@ class jira_graph(object):
         axis.legend(loc='upper right', bbox_to_anchor=(1.01, 1.08), ncol=2, fontsize='small', labelspacing=0.2)
 
         # Save data as excel tab
-        team_data.to_excel(writer, sheet_name="{0}_{1}".format(team_name, column_type.name))
+        team_data.to_excel(writer, sheet_name="{0}_{1}".format(team_name, column_type.name), index=False)
         
 
     def __get_teams_str(self, teams):

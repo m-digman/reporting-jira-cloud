@@ -82,7 +82,11 @@ class jira_epic(object):
 
         for epic_name in epics:
             epic_data = data.loc[data[EPIC] == epic_name].copy()
-            epic_title = "{0} [{1}]".format(epic_name, epic_data.iloc[0]["Epic ID"])
+            epic_id = epic_data.iloc[0]["Epic ID"]
+            if isinstance(epic_id, str):
+                epic_title = "{0} [{1}]".format(epic_name, epic_id)
+            else:
+                epic_title = "{0}".format(epic_name)
 
             if number_of_epics == 1:
                 axis = axes
