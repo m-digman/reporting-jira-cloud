@@ -86,7 +86,7 @@ class jira_epic(object):
             if isinstance(epic_id, str):
                 epic_title = "{0} [{1}]".format(epic_name, epic_id)
             else:
-                epic_title = "{0}".format(epic_name)
+                epic_title = epic_name
 
             if number_of_epics == 1:
                 axis = axes
