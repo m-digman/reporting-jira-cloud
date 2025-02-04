@@ -4,7 +4,6 @@ from datetime import datetime
 import csv
 import os
 import os.path
-from pprint import pprint
 
 
 class jira_data(object):
@@ -146,8 +145,6 @@ class jira_data(object):
 
             start_at = start_index + page_size
             is_last_page = (start_at >= total_rows)
-
-            # print("{0}, {1}, {2} (next: {3}, last: {4})".format(start_index, page_size, total_rows, start_at, is_last_page))
 
 
     def __get_jql_for_filter(self, filter_id):
