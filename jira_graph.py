@@ -29,7 +29,7 @@ class jira_graph(object):
 
     def __plot_monthly_team_ticket_categories(self, team_name, team_data, axis, writer, show_ylabel):
         # Get monthly ticket count for each category 
-        team_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='M'), CATEGORY]).size().to_frame(name=TICKETS).reset_index()
+        team_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='ME'), CATEGORY]).size().to_frame(name=TICKETS).reset_index()
         # Change column to Year-Month (Bug: https://github.com/pandas-dev/pandas/issues/4387)
         team_data[RESOLVED] = team_data[RESOLVED].dt.strftime('%Y-%m')
         team_data = team_data.pivot_table(values=TICKETS, index=[RESOLVED], columns=CATEGORY).fillna(0)
@@ -73,14 +73,14 @@ class jira_graph(object):
 
 
     def __plot_monthly_team_ticket_totals(self, team_name, team_data, axis, writer, show_ylabel):
-        ticket_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='M')]).size().to_frame(name=TICKETS).reset_index()
+        ticket_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='ME')]).size().to_frame(name=TICKETS).reset_index()
         ticket_data.plot.line(y=TICKETS, x=RESOLVED, ax=axis, c="tab:olive", lw=3, label="Total Tickets")
 
         avg_tickets = ticket_data[TICKETS].mean()
         ticket_data.loc[:, AVERAGE] = avg_tickets
         ticket_data.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:green", lw=2, label="Monthly Avg ({0:.1f})".format(avg_tickets))
 
-        points_data = pd.pivot_table(team_data, values=[STORY_POINTS], index=[pd.Grouper(key=RESOLVED, freq='M')], aggfunc={STORY_POINTS: np.sum}).reset_index()
+        points_data = pd.pivot_table(team_data, values=[STORY_POINTS], index=[pd.Grouper(key=RESOLVED, freq='ME')], aggfunc={STORY_POINTS: 'sum'}).reset_index()
         points_data.plot.line(y=STORY_POINTS, x=RESOLVED, ax=axis, c="tab:blue", lw=3, label="Total Story Points")
 
         avg_points = points_data[STORY_POINTS].mean()
@@ -137,9 +137,9 @@ class jira_graph(object):
         team_data.loc[:, AVERAGE] = average
 
         data_avg = pd.pivot_table(team_data, values=[AVERAGE], index=[pd.Grouper(key=RESOLVED, freq='W')]).reset_index()
-        data_time = pd.pivot_table(team_data, values=[data_column], index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: np.mean}).reset_index()
-        data_min = pd.pivot_table(team_data, values=data_column, index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: min}).reset_index()
-        data_max = pd.pivot_table(team_data, values=data_column, index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: max}).reset_index()
+        data_time = pd.pivot_table(team_data, values=[data_column], index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: 'mean'}).reset_index()
+        data_min = pd.pivot_table(team_data, values=data_column, index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: 'min'}).reset_index()
+        data_max = pd.pivot_table(team_data, values=data_column, index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: 'max'}).reset_index()
 
         data_avg.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:red", lw=2, label="Average ({0:.1f})".format(average))
         data_time.plot.line(y=data_column, x=RESOLVED, ax=axis, c="tab:green", lw=3, label=legend_label)
