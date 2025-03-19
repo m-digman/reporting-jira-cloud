@@ -1,6 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
 from enum import Enum, auto
 
 
@@ -15,6 +14,14 @@ TEAM = "Team"
 TICKETS = "Tickets"
 TOTAL = "Total"
 
+MONTHLY_AVG = "Monthly Avg ({0:.1f})"
+
+COLOUR_BLUE = "tab:blue"
+COLOUR_CYAN = "tab:cyan"
+COLOUR_GREEN = "tab:green"
+COLOUR_OLIVE = "tab:olive"
+COLOUR_PURPLE = "tab:purple"
+COLOUR_RED = "tab:red"
 
 class jira_graph(object):
 
@@ -39,7 +46,7 @@ class jira_graph(object):
         ticket_total = team_data.sum(axis=1).to_frame(name=TOTAL).reset_index()
         average = ticket_total[TOTAL].mean()
         ticket_total.loc[:, AVERAGE] = average
-        ticket_total.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:green", lw=2, label="Monthly Avg ({0:.1f})".format(average))
+        ticket_total.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c=COLOUR_GREEN, lw=2, label=MONTHLY_AVG.format(average))
 
         ylabel = "Tickets Completed" if show_ylabel else ""
         self.__set_labels(axis, team_name, ylabel)
@@ -74,18 +81,18 @@ class jira_graph(object):
 
     def __plot_monthly_team_ticket_totals(self, team_name, team_data, axis, writer, show_ylabel):
         ticket_data = team_data.groupby([pd.Grouper(key=RESOLVED, freq='ME')]).size().to_frame(name=TICKETS).reset_index()
-        ticket_data.plot.line(y=TICKETS, x=RESOLVED, ax=axis, c="tab:olive", lw=3, label="Total Tickets")
+        ticket_data.plot.line(y=TICKETS, x=RESOLVED, ax=axis, c=COLOUR_OLIVE, lw=3, label="Total Tickets")
 
         avg_tickets = ticket_data[TICKETS].mean()
         ticket_data.loc[:, AVERAGE] = avg_tickets
-        ticket_data.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:green", lw=2, label="Monthly Avg ({0:.1f})".format(avg_tickets))
+        ticket_data.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c=COLOUR_GREEN, lw=2, label=MONTHLY_AVG.format(avg_tickets))
 
         points_data = pd.pivot_table(team_data, values=[STORY_POINTS], index=[pd.Grouper(key=RESOLVED, freq='ME')], aggfunc={STORY_POINTS: 'sum'}).reset_index()
-        points_data.plot.line(y=STORY_POINTS, x=RESOLVED, ax=axis, c="tab:blue", lw=3, label="Total Story Points")
+        points_data.plot.line(y=STORY_POINTS, x=RESOLVED, ax=axis, c=COLOUR_BLUE, lw=3, label="Total Story Points")
 
         avg_points = points_data[STORY_POINTS].mean()
         points_data.loc[:, AVERAGE] = avg_points
-        points_data.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:cyan", lw=2, label="Monthly Avg ({0:.1f})".format(avg_points))
+        points_data.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c=COLOUR_CYAN, lw=2, label=MONTHLY_AVG.format(avg_points))
 
         ylabel = "Number Completed" if show_ylabel else ""
         self.__set_labels(axis, team_name, ylabel)
@@ -111,7 +118,7 @@ class jira_graph(object):
         next_tick = 0
         yticks = []
 
-        start, end = axis.get_ylim()
+        _, end = axis.get_ylim()
         while next_tick <= end:
             yticks.append(next_tick)
             if next_tick < 40 and end <=220:
@@ -141,10 +148,10 @@ class jira_graph(object):
         data_min = pd.pivot_table(team_data, values=data_column, index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: 'min'}).reset_index()
         data_max = pd.pivot_table(team_data, values=data_column, index=[pd.Grouper(key=RESOLVED, freq='W')], aggfunc={data_column: 'max'}).reset_index()
 
-        data_avg.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c="tab:red", lw=2, label="Average ({0:.1f})".format(average))
-        data_time.plot.line(y=data_column, x=RESOLVED, ax=axis, c="tab:green", lw=3, label=legend_label)
-        data_min.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c="tab:blue", s=35, label="Min")
-        data_max.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c="tab:purple", s=35, label="Max")
+        data_avg.plot.line(y=AVERAGE, x=RESOLVED, ax=axis, c=COLOUR_RED, lw=2, label="Average ({0:.1f})".format(average))
+        data_time.plot.line(y=data_column, x=RESOLVED, ax=axis, c=COLOUR_GREEN, lw=3, label=legend_label)
+        data_min.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c=COLOUR_BLUE, s=35, label="Min")
+        data_max.plot.scatter(y=data_column, x=RESOLVED, ax=axis, c=COLOUR_PURPLE, s=35, label="Max")
 
         ylabel = "Days" if show_ylabel else ""
         self.__set_labels(axis, team_name, ylabel)
