@@ -3,8 +3,6 @@ import json
 
 
 class jira_request(object):
-    __base_rest_url = "{0}/rest/{1}"
-    __base_api2_url = "{0}/rest/api/2/{1}"
     __base_api3_url = "{0}/rest/api/3/{1}"
     __statuses = {}
 
@@ -33,14 +31,6 @@ class jira_request(object):
             return json.loads(response.content)
         else:
             response.raise_for_status()
-
-    
-    def get_rest_request(self, url_path):
-        return self.__get_request(self.__base_rest_url.format(self.__base_url, url_path))
-
-
-    def get_api2_request(self, url_path):
-        return self.__get_request(self.__base_api2_url.format(self.__base_url, url_path))
 
 
     def get_api3_request(self, url_path):

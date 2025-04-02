@@ -9,7 +9,8 @@ import os.path
 class jira_data(object):
     # Docs https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issue-search/#api-rest-api-3-search-get
     __params_filter = "filter/{0}"
-    __params_search = "search?jql={0}&maxResults=100&startAt={1}&fields=summary,status,created,resolutiondate,labels,issuetype,parent,customfield_10014,customfield_10016,customfield_10023,customfield_10024"
+    __params_search_jql = "search/jql?jql={0}&maxResults=500&fields=summary,status,created,resolutiondate,labels,issuetype,parent,customfield_10014,customfield_10016,customfield_10023,customfield_10024"
+    __params_next_page_token = "{0}&nextPageToken={1}"
     __csv_columns = ["Key","Summary","Category","Team","Status","Created","Resolved","Epic","Epic ID","Issue Type","Story Points","Lead Time","To Do","In Progress","Lead Days","Cycle Days"]
 
 
@@ -126,25 +127,25 @@ class jira_data(object):
                          epic_id, issue_type, story_points, lead_time, to_do, in_progress, lead_days, cycle_days])
 
 
-    def __search_jira(self, jql, start_at):
-        url_query = self.__params_search.format(jql, start_at)
+    def __search_jql_jira(self, jql, next_page_token):
+        url_query = self.__params_search_jql.format(jql)
+        if next_page_token:
+            url_query = self.__params_next_page_token.format(url_query, next_page_token)
         return self.__jira_api.get_api3_request(url_query)
 
 
     def __extract_paged_search_data(self, jql, csv_rows):
-        start_at = 0
+        next_page_token = None
         is_last_page = False
 
         while not is_last_page:
-            data = self.__search_jira(jql, start_at)
+            data = self.__search_jql_jira(jql, next_page_token)
             self.__extract_search_results(data["issues"], csv_rows)
 
-            start_index = int(data["startAt"])
-            page_size = int(data["maxResults"])
-            total_rows = int(data["total"])
-
-            start_at = start_index + page_size
-            is_last_page = (start_at >= total_rows)
+            try:
+                next_page_token = data["nextPageToken"]
+            except KeyError:
+                is_last_page = True
 
 
     def __get_jql_for_filter(self, filter_id):
